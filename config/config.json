@@ -1,0 +1,28 @@
+{
+  "proxies": [
+    {
+      "listen_addr": ":80",
+      "target_addr": "192.168.129.88:80",
+      "protocol": "tcp"
+    },
+    {
+      "listen_addr": ":25566",
+      "target_addr": "192.168.129.86:25565",
+      "protocol": "tcp"
+    }
+  ],
+  "firewall": {
+    "enable_firewall": true,
+    "default_allow": false
+  },
+  "logging": {
+    "enable_logging": true,
+    "log_dir": "./logs"
+  },
+  "webserver": {
+    "enable_webserver": true,
+    "listen_port": ":47319",
+    "static_dir": "./static",
+    "keys_dir": "./keys"
+  }
+}
