@@ -7,12 +7,11 @@ import (
 
 func CheckWhitelist(ip string, conn net.Conn) bool {
 	state.Mutex.Lock()
+	defer state.Mutex.Unlock()
 	allowed := state.WhitelistedIPs[ip]
 	if allowed {
 		state.ActiveConns[ip] = append(state.ActiveConns[ip], conn)
-		state.Mutex.Unlock()
 		return true
 	}
-	state.Mutex.Unlock()
 	return false
 }

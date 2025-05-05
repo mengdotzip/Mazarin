@@ -53,9 +53,5 @@ go.work.sum
 .history
 .ionide
 
-
-#Keys
-keys.json
-
 #builds
 mazarin

@@ -26,6 +26,7 @@ func handleProxyConnection(ctx context.Context, clientConn net.Conn, targetAddr,
 		targetConn.Close()
 
 		state.Mutex.Lock()
+		defer state.Mutex.Unlock()
 		conns := state.ActiveConns[clientIP]
 		for i, c := range conns {
 			if c == clientConn {
@@ -36,7 +37,6 @@ func handleProxyConnection(ctx context.Context, clientConn net.Conn, targetAddr,
 		if len(state.ActiveConns[clientIP]) == 0 {
 			delete(state.ActiveConns, clientIP)
 		}
-		state.Mutex.Unlock()
 		log.Printf("PROXY: connection closed for %s", clientIP)
 	}()
 

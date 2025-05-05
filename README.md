@@ -3,6 +3,124 @@
 **Go-based proxy server with web authentication, firewall capabilities, and more to come :)**
 
 
+## Features
+
+- Forward proxy with TCP support
+- Web-based authentication with hashed keys
+- IP whitelisting firewall
+- Server-Sent Events (SSE) support for real-time communication
+- Graceful shutdown handling
+- Configurable via JSON
+- Modular Go codebase for easy extension
+
+
+## Getting Started
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/Maty-0/Mazarin.git
+cd mazarin
+```
+
+2. **Configure**
+
+Create a `config.json` file (in the same path as the executable) with the following structure:
+
+```json
+{
+  "proxies": [
+    {
+      "listen_addr": ":80",
+      "target_addr": "192.168.129.88:80",
+      "protocol": "tcp"
+    },
+    {
+      "listen_addr": ":25566",
+      "target_addr": "192.168.129.86:25565",
+      "protocol": "tcp"
+    }
+  ],
+  "firewall": {
+    "enable_firewall": true,
+    "default_allow": false
+  },
+  "logging": {
+    "enable_logging": true,
+    "log_dir": "./logs"
+  },
+  "webserver": {
+    "enable_webserver": true,
+    "listen_port": ":47319",
+    "static_dir": "./static",
+    "keys_dir": "./keys"
+  }
+}
+```
+
+
+### Configuration Options
+
+- **proxies**: Array of proxy configurations
+    - `listen_addr`: The local address and port to listen on (e.g., ":80")
+    - `target_addr`: The destination address to forward traffic to
+    - `protocol`: Either "tcp" or "udp"
+- **firewall**:
+    - `enable_firewall`: Whether to enable the firewall
+    - `default_allow`: If true, allows all connections by default; if false, only allows whitelisted IPs
+- **logging**:
+    - `enable_logging`: Whether to enable logging
+    - `log_dir`: Directory where logs will be stored
+- **webserver**:
+    - `enable_webserver`: Whether to enable the web interface
+    - `listen_port`: Port for the web interface
+    - `static_dir`: Directory for static web files
+    - `keys_dir`: Directory containing authentication keys
+
+3. **Set up authentication**
+
+Create a `keys.json` file in your keys directory:
+
+```json
+{
+  "users": [
+      {
+        "name": "test",
+        "hash": "$2a$10$f.qQVxQMikTkKZWYekqYfOi17O8f1/83HA5CX8TADYtQGhHmptZha",
+        "allowed_sessions": 1
+      },
+      {
+        "name": "user2",
+        "hash": "$2a$10$Z1/wTrjFwzWaC60CwQYgVe.M7hcKr0YESo2G6etOSInxkklltcfIO", 
+        "allowed_sessions": 1
+      }
+  ]
+}
+```
+(In this example the password for test is test_password and for user2 is user2_password)
+
+4. **Generate hashed keys**
+```bash
+go run main.go -key yourpassword
+```
+
+Use the output hash in your `keys.json` for authentication.
+
+5. **Run**
+```bash
+go run main.go
+```
+
+
+
+## Planned Improvements
+
+- Token-based authentication (JWT) with device and IP binding
+- Domain-based routing and virtual hosting
+- SSL/TLS support with automatic certificate management
+- Auto-blacklisting and rate limiting for abusive clients
+- Structured logging and metrics integration
+
+
 
 ## Who is Mazarin
 

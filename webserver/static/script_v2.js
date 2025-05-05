@@ -20,7 +20,8 @@ async function authenticate(username, key) {
     });
     
     if (!response.ok) {
-      throw new Error('Authentication failed');
+      console.error('Authentication failed');
+      return false;
     }
     
     const data = await response.json();
@@ -57,6 +58,10 @@ function connectSSE() {
   eventSource.addEventListener("close", function(event) {
     console.log("Server is shutting down"); //todo add event data to this
     eventSource.close();
+
+    messageDiv.textContent = 'Server shutting down... Disconnected';
+    messageDiv.style.color = 'blue';
+    dcButton.style.visibility = 'hidden'
   });
   
   eventSource.addEventListener("ping", function(event) {

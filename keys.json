@@ -1,0 +1,14 @@
+{
+  "users": [
+      {
+        "name": "test",
+        "hash": "$2a$10$f.qQVxQMikTkKZWYekqYfOi17O8f1/83HA5CX8TADYtQGhHmptZha",
+        "allowed_sessions": 1
+      },
+      {
+        "name": "user2",
+        "hash": "$2a$10$Z1/wTrjFwzWaC60CwQYgVe.M7hcKr0YESo2G6etOSInxkklltcfIO", 
+        "allowed_sessions": 1
+      }
+  ]
+}
