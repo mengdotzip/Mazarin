@@ -25,11 +25,6 @@ type RoutesConfig struct {
 	Protocol   string `json:"protocol"`
 }
 
-type RouterConfig struct {
-	EnableRouter bool           `json:"enable_router"`
-	Routes       []RoutesConfig `json:"routes"`
-}
-
 // ----
 type TLSConfig struct {
 	EnableTLS bool     `json:"enable_tls"`
@@ -63,7 +58,7 @@ type LoggingConfig struct {
 // ----
 type Config struct {
 	Proxy     []ProxyConfig   `json:"proxies"`
-	Router    RouterConfig    `json:"router"`
+	Router    []RoutesConfig  `json:"router"`
 	TLS       TLSConfig       `json:"tls"`
 	Firewall  FirewallConfig  `json:"firewall"`
 	Logging   LoggingConfig   `json:"logging"`

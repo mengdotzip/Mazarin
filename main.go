@@ -49,8 +49,8 @@ func main() {
 		defer cfg.Logging.Close()
 	}
 
-	if cfg.Router.EnableRouter {
-		router.InitRouter(&cfg.Router)
+	if len(cfg.Router) > 0 {
+		router.InitRouter(cfg.Router)
 	}
 
 	var wg sync.WaitGroup
@@ -62,7 +62,7 @@ func main() {
 			Type:      "func",
 		}
 		router.AddRoute(webRoute)
-		cfg.Router.Routes = append(cfg.Router.Routes, webRoute)
+		cfg.Router = append(cfg.Router, webRoute)
 		webserver.Init(webserver.LoadKeys(cfg.Webserver.KeysDir))
 	}
 	//-----
@@ -79,15 +79,15 @@ func main() {
 		usedPortsProxy = append(usedPortsProxy, srvs.ListenAddr)
 		wg.Add(1)
 		go func() {
-			if err := listeners.ListenProxy(ctx, &cfg.Router, &cfg.Firewall, &srvs, &wg); err != nil {
+			if err := listeners.ListenProxy(ctx, &cfg.Firewall, &srvs, &wg); err != nil {
 				log.Println("Proxy server failed starting up, starting a shutdown")
 				stop() //Signal with the main ctx to start a clean shutdown
 			}
 		}()
 	}
 
-	//router servers, the router logic will probbably replace the proxy logic in the future (since the router also has proxy)
-	for _, srvs := range cfg.Router.Routes {
+	//start router servers, the router logic will probbably replace the proxy logic in the future (since the router also has proxy)
+	for _, srvs := range cfg.Router {
 		if slices.Contains(usedPortsProxy, srvs.Port) {
 			log.Println("ROUTER ERROR: Cant have a proxy and a route on the same port, both need to be routes.")
 			stop()

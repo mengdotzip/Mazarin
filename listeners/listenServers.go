@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func ListenProxy(ctx context.Context, routerConf *config.RouterConfig, fw *config.FirewallConfig, proxyConf *config.ProxyConfig, wg *sync.WaitGroup) error {
+func ListenProxy(ctx context.Context, fw *config.FirewallConfig, proxyConf *config.ProxyConfig, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
 	listener, err := net.Listen(proxyConf.Protocol, proxyConf.ListenAddr)
@@ -131,7 +131,7 @@ func ListenWebTLS(parentCtx context.Context, tlsConf *config.TLSConfig, fw *conf
 	}
 
 	//Let the router handle everything
-	mux.HandleFunc("/", router.RouteWithCfg(ctx, webConf))
+	mux.HandleFunc("/", router.RouteWithCfg(ctx, webConf, fw))
 
 	var webWG sync.WaitGroup
 	webWG.Add(1)
@@ -165,7 +165,7 @@ func ListenWeb(parentCtx context.Context, tlsConf *config.TLSConfig, fw *config.
 	}
 
 	//Let the router handle everything
-	mux.HandleFunc("/", router.RouteWithCfg(ctx, webConf))
+	mux.HandleFunc("/", router.RouteWithCfg(ctx, webConf, fw))
 
 	var webWG sync.WaitGroup
 	webWG.Add(1)

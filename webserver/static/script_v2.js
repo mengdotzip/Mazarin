@@ -55,7 +55,7 @@ function connectSSE() {
     pingDiv.style.color = '#064a72';
     //----
 
-    messageDiv.textContent = 'Successfully authenticated!';
+    messageDiv.innerText = 'Successfully authenticated!\nDO NOT Close this window or the session will end';
     messageDiv.style.color = 'green';
     dcButton.style.visibility = 'visible'
     console.log('SSE connection established');

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"mazarin/firewall"
 	"mazarin/state"
 	"net"
 	"net/http"
@@ -104,9 +105,7 @@ func SseHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("WEBSERVER: IP %v contacted /sse", clientIP)
 
-	state.Mutex.RLock()
-	allowed := state.WhitelistedIPs[clientIP]
-	state.Mutex.RUnlock()
+	allowed := firewall.CheckWhitelist(clientIP)
 
 	if !allowed {
 		log.Printf("WEBSERVER: Unauthorized SSE connection attempt from IP %v", clientIP)
@@ -190,25 +189,6 @@ func sendPing(w http.ResponseWriter, flusher http.Flusher) error {
 	}
 	flusher.Flush()
 	return nil
-}
-
-func stopServer(server *http.Server) {
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Printf("WEBSERVER: forced shutdown: %v", err)
-		server.Close()
-		return
-	}
-	log.Printf("WEBSERVER: Server shut down successfully")
-}
-
-// inject the main context into the sse function
-func sseWithContext(ctx context.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		SseHandler(ctx, w, r)
-	}
 }
 
 func Init(uD *UsersData) {

@@ -1,6 +1,12 @@
 # Mazarin
 
-**Go-based proxy server with web authentication, firewall capabilities, and more to come :)**
+**Go-based proxy server with web authentication, firewall capabilities, TLS, routing and more to come :)**
+
+## Backstory
+
+Originally, Mazarin was created out of necessity: a friend wanted to connect to my game server, but was behind a VPN, making IP-based whitelisting impossible. Without the budget for a proper VPS or commercial solutions, I built Mazarin as a self-hosted proxy with authentication and firewall features to whitelist users dynamically.
+
+Since then, Mazarin has evolved into a more robust proxy server with domain routing, SSL support and plans for token-based authentication, advanced firewall features like auto-blacklisting and rate limiting.
 
 
 ## Features
@@ -37,9 +43,7 @@ Create a `config.json` file (in the same path as main.go or the executable) with
       "protocol": "tcp"
     }
   ],
-  "router": {
-    "enable_router": true,
-    "routes": [
+  "router": [
       {
         "listen_url": "vault.domain.com",
         "port": ":47319",
@@ -47,8 +51,7 @@ Create a `config.json` file (in the same path as main.go or the executable) with
         "type": "proxy",
         "protocol": "tcp"
       }
-    ]
-  },
+  ],
   "tls": {
     "enable_tls": true,
     "cert_file": "./tls/domain.pem",
@@ -83,14 +86,12 @@ Create a `config.json` file (in the same path as main.go or the executable) with
     - `listen_addr`: The local address and port to listen on (e.g., ":80")
     - `target_addr`: The destination address to forward traffic to
     - `protocol`: Either "tcp" or "udp"
-- **router**: Domain-based routing configuration
-    - `enable_router`: Whether to enable the router
-    - `routes`: Array of route configurations
-        - `listen_url`: Domain name to listen for (e.g., "vault.domain.com" or "192.168.0.10")
-        - `port`: Port to listen on
-        - `target_addr`: Target address for proxy routes
-        - `type`: Route type ("proxy" or "func")
-        - `protocol`: Protocol for proxy routes ("tcp" or "udp")
+- **router**: Array of routing configurations
+    - `listen_url`: Domain name to listen for (e.g., "vault.domain.com" or "192.168.0.10")
+    - `port`: Port to listen on
+    - `target_addr`: Target address for proxy routes
+    - `type`: Route type ("proxy" or "func")
+    - `protocol`: Protocol for proxy routes ("tcp" or "udp")
 - **tls**: TLS/SSL configuration
     - `enable_tls`: Whether to enable TLS
     - `cert_file`: Path to certificate file
@@ -158,11 +159,3 @@ go run main.go
 ## Who is Mazarin
 
 Named after Cardinal Jules Mazarin, the influential 17th-century chief minister and regent of France, who acted as a powerful proxy to King Louis XIV during his minority. Just as Mazarin managed and secured the affairs of the kingdom behind the scenes, this proxy server governs and protects access to your network services - providing controlled, authenticated, and secure connections.
-
-
-
-## Backstory
-
-Originally, Mazarin was created out of necessity: a friend wanted to connect to my game server, but was behind a VPN, making IP-based whitelisting impossible. Without the budget for a proper VPS or commercial solutions, I built Mazarin as a self-hosted proxy with authentication and firewall features to whitelist users dynamically.
-
-Since then, Mazarin has evolved into a more robust proxy server with plans for token-based authentication, domain routing, SSL support, and advanced firewall features like auto-blacklisting and rate limiting.

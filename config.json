@@ -6,9 +6,7 @@
       "protocol": "tcp"
     }
   ],
-  "router": {
-    "enable_router": true,
-    "routes": [
+  "router": [
       {
         "listen_url": "vault.meng.zip",
         "port": ":47319",
@@ -16,8 +14,7 @@
         "type": "proxy",
         "protocol": "tcp"
       }
-    ]
-  },
+  ],
   "tls": {
     "enable_tls": true,
     "cert_file": "./tls/domain.pem",

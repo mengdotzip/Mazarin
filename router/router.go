@@ -14,8 +14,8 @@ import (
 
 var routes = make(map[string]config.RoutesConfig)
 
-func InitRouter(routConf *config.RouterConfig) {
-	for _, route := range routConf.Routes {
+func InitRouter(routConf []config.RoutesConfig) {
+	for _, route := range routConf {
 		AddRoute(route)
 	}
 }
@@ -24,13 +24,13 @@ func AddRoute(routConf config.RoutesConfig) {
 	routes[routConf.ListenUrl] = routConf
 }
 
-func RouteWithCfg(ctx context.Context, webConf *config.WebserverConfig) http.HandlerFunc {
+func RouteWithCfg(ctx context.Context, webConf *config.WebserverConfig, firewallConf *config.FirewallConfig) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		route(ctx, webConf, w, r)
+		route(ctx, webConf, firewallConf, w, r)
 	}
 }
 
-func route(ctx context.Context, webConf *config.WebserverConfig, w http.ResponseWriter, r *http.Request) {
+func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *config.FirewallConfig, w http.ResponseWriter, r *http.Request) {
 	//--Set secure headers---
 	//ONLY SET HEADERS FOR WEB, might have to change this to a sperate func in the future
 	//Only set HSTS if using HTTPS
@@ -46,7 +46,6 @@ func route(ctx context.Context, webConf *config.WebserverConfig, w http.Response
 	reqHost := strings.Split(strings.ToLower(r.Host), ":") //TODO check what happens on ipv6
 
 	//FIREWALL
-	//TODO ADD FIREWALL CONFIG TO THIS
 	clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		log.Printf("ROUTER: Failed to parse client IP: %v", err)
@@ -54,10 +53,15 @@ func route(ctx context.Context, webConf *config.WebserverConfig, w http.Response
 		return
 	}
 
-	if !firewall.CheckWhitelist(clientIP) && reqHost[0] != webConf.ListenURL { //Make sure the router still allows the proxy auth page to load :p
-		log.Printf("ROUTER: IP: %v access dennied for: %v", clientIP, reqHost[0])
-		http.Error(w, "Proxy Authentication Required", http.StatusProxyAuthRequired)
-		return
+	if firewallConf.EnableFirewall {
+		//Add blacklist/whitelist here in the future
+		if !firewallConf.DefaultAllow {
+			if !firewall.CheckWhitelist(clientIP) && reqHost[0] != webConf.ListenURL { //Make sure the router still allows the proxy auth page to load :p
+				log.Printf("ROUTER: IP: %v access dennied for: %v", clientIP, reqHost[0])
+				http.Error(w, "Proxy Authentication Required", http.StatusProxyAuthRequired)
+				return
+			}
+		}
 	}
 	//------
 
@@ -73,6 +77,8 @@ func route(ctx context.Context, webConf *config.WebserverConfig, w http.Response
 	switch routeInfo.Type {
 	case "proxy":
 		proxy.HandleHTTPProxy(w, r, routeInfo.TargetAddr)
+	case "static":
+	case "redirect":
 	case "func":
 		if webConf.EnableWebServer {
 			//Currently only our webserver uses func, the func type is meant for routes that call code in the program
