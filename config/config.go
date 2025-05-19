@@ -9,32 +9,62 @@ import (
 	"time"
 )
 
+// ----
 type ProxyConfig struct {
 	ListenAddr string `json:"listen_addr"`
 	TargetAddr string `json:"target_addr"`
 	Protocol   string `json:"protocol"`
 }
 
+// ----
+type RoutesConfig struct {
+	ListenUrl  string `json:"listen_url"`
+	Port       string `json:"port"`
+	TargetAddr string `json:"target_addr"`
+	Type       string `json:"type"`
+	Protocol   string `json:"protocol"`
+}
+
+type RouterConfig struct {
+	EnableRouter bool           `json:"enable_router"`
+	Routes       []RoutesConfig `json:"routes"`
+}
+
+// ----
+type TLSConfig struct {
+	EnableTLS bool     `json:"enable_tls"`
+	Cert      string   `json:"cert_file"`
+	Key       string   `json:"key_file"`
+	Domains   []string `json:"domains"`
+}
+
+// ----
 type FirewallConfig struct {
 	EnableFirewall bool `json:"enable_firewall"`
 	DefaultAllow   bool `json:"default_allow"`
 }
 
+// ----
 type WebserverConfig struct {
 	EnableWebServer bool   `json:"enable_webserver"`
 	ListenPort      string `json:"listen_port"`
+	ListenURL       string `json:"listen_url"`
 	StaticDir       string `json:"static_dir"`
 	KeysDir         string `json:"keys_dir"`
 }
 
+// ----
 type LoggingConfig struct {
 	EnableLogging bool   `json:"enable_logging"`
 	LogDir        string `json:"log_dir"`
 	logFile       *os.File
 }
 
+// ----
 type Config struct {
 	Proxy     []ProxyConfig   `json:"proxies"`
+	Router    RouterConfig    `json:"router"`
+	TLS       TLSConfig       `json:"tls"`
 	Firewall  FirewallConfig  `json:"firewall"`
 	Logging   LoggingConfig   `json:"logging"`
 	Webserver WebserverConfig `json:"webserver"`

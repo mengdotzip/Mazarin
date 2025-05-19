@@ -1,0 +1,96 @@
+package router
+
+import (
+	"context"
+	"log"
+	"mazarin/config"
+	"mazarin/firewall"
+	"mazarin/proxy"
+	"mazarin/webserver"
+	"net"
+	"net/http"
+	"strings"
+)
+
+var routes = make(map[string]config.RoutesConfig)
+
+func InitRouter(routConf *config.RouterConfig) {
+	for _, route := range routConf.Routes {
+		AddRoute(route)
+	}
+}
+
+func AddRoute(routConf config.RoutesConfig) {
+	routes[routConf.ListenUrl] = routConf
+}
+
+func RouteWithCfg(ctx context.Context, webConf *config.WebserverConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		route(ctx, webConf, w, r)
+	}
+}
+
+func route(ctx context.Context, webConf *config.WebserverConfig, w http.ResponseWriter, r *http.Request) {
+	//--Set secure headers---
+	//ONLY SET HEADERS FOR WEB, might have to change this to a sperate func in the future
+	//Only set HSTS if using HTTPS
+	if r.TLS != nil {
+		w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+	}
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'")
+	w.Header().Set("Referrer-Policy", "no-referrer")
+	w.Header().Set("Permissions-Policy", "geolocation=(), camera=(), microphone=()") //IMPORTANT, if a proxied site needs these then you might want to disable this
+	//-------
+
+	reqHost := strings.Split(strings.ToLower(r.Host), ":") //TODO check what happens on ipv6
+
+	//FIREWALL
+	//TODO ADD FIREWALL CONFIG TO THIS
+	clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		log.Printf("ROUTER: Failed to parse client IP: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if !firewall.CheckWhitelist(clientIP) && reqHost[0] != webConf.ListenURL { //Make sure the router still allows the proxy auth page to load :p
+		log.Printf("ROUTER: IP: %v access dennied for: %v", clientIP, reqHost[0])
+		http.Error(w, "Proxy Authentication Required", http.StatusProxyAuthRequired)
+		return
+	}
+	//------
+
+	//ROUTING
+	routeInfo, ok := routes[reqHost[0]]
+	if !ok {
+		log.Printf("ROUTER: Requested url is not a configured route: %v", reqHost[0])
+		http.Error(w, "Domain does not exist", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("ROUTER: IP %v getting routed to %v", clientIP, routeInfo.TargetAddr)
+	switch routeInfo.Type {
+	case "proxy":
+		proxy.HandleHTTPProxy(w, r, routeInfo.TargetAddr)
+	case "func":
+		if webConf.EnableWebServer {
+			//Currently only our webserver uses func, the func type is meant for routes that call code in the program
+			//TODO make this more configurable
+			var stylesCSS = webConf.StaticDir + "/styles.css"
+			var scriptJS = webConf.StaticDir + "/script_v2.js"
+			switch r.URL.Path {
+			case "/":
+				http.ServeFile(w, r, webConf.StaticDir)
+			case "/styles.css", "/styles.css/":
+				http.ServeFile(w, r, stylesCSS)
+			case "/script_v2.js":
+				http.ServeFile(w, r, scriptJS)
+			case "/auth":
+				webserver.AuthHandler(w, r)
+			case "/sse":
+				webserver.SseHandler(ctx, w, r)
+			}
+		}
+	}
+}

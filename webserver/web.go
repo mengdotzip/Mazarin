@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"mazarin/config"
 	"mazarin/state"
 	"net"
 	"net/http"
 	"regexp"
-	"sync"
 	"time"
 )
 
@@ -21,7 +19,7 @@ type AuthRequest struct {
 	Key      string `json:"key"`
 }
 
-func authHandler(w http.ResponseWriter, r *http.Request) {
+func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
@@ -90,7 +88,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func sseHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func SseHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
@@ -209,54 +207,11 @@ func stopServer(server *http.Server) {
 // inject the main context into the sse function
 func sseWithContext(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		sseHandler(ctx, w, r)
+		SseHandler(ctx, w, r)
 	}
 }
 
-func Start(ctx context.Context, conf *config.WebserverConfig, uD *UsersData, wg *sync.WaitGroup) {
-	defer wg.Done()
+func Init(uD *UsersData) {
 	userData = uD
-	//non default mux for security
-	mux := http.NewServeMux()
-	server := &http.Server{
-		Addr:    conf.ListenPort,
-		Handler: mux,
-	}
 
-	mux.Handle("/", http.FileServer(http.Dir(conf.StaticDir)))
-	mux.HandleFunc("/auth", authHandler)
-	mux.HandleFunc("/sse", sseWithContext(ctx))
-
-	// Start the server
-	var webWG sync.WaitGroup
-
-	webWG.Add(1)
-	go func() {
-		defer webWG.Done()
-		log.Println("WEBSERVER: running on port: ", conf.ListenPort)
-		err := server.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			log.Printf("WEBSERVER: server error: %v", err)
-			ctx.Done() //start shutdwon to prevent just the proxy server running
-		}
-	}()
-
-	<-ctx.Done()
-	log.Printf("WEBSERVER: Shutdown signal received")
-	stopServer(server)
-
-	//added this to make sure a deadlock on shutdown would be contained to this func
-	webWGDone := make(chan struct{})
-	go func() {
-		webWG.Wait()
-		close(webWGDone)
-	}()
-
-	select {
-	case <-webWGDone:
-		return
-	case <-time.After(4 * time.Second):
-		log.Printf("WEBSERVER: Timed out waiting for web server goroutines to finish")
-		return
-	}
 }

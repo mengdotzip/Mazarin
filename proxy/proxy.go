@@ -4,15 +4,16 @@ import (
 	"context"
 	"io"
 	"log"
-	"mazarin/config"
-	"mazarin/firewall"
 	"mazarin/state"
 	"net"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"strings"
 	"sync"
 )
 
-func handleProxyConnection(ctx context.Context, clientConn net.Conn, targetAddr, clientIP string, protocol string) {
+func HandleProxyConnection(ctx context.Context, clientConn net.Conn, targetAddr, clientIP string, protocol string) {
 	targetConn, err := net.Dial(protocol, targetAddr)
 	if err != nil {
 		log.Println("PROXY: Failed to connect to target:", err)
@@ -68,70 +69,42 @@ func handleProxyConnection(ctx context.Context, clientConn net.Conn, targetAddr,
 	wg.Wait()
 }
 
-func ProxyListener(ctx context.Context, fw *config.FirewallConfig, proxy *config.ProxyConfig, wg *sync.WaitGroup) error {
-	defer wg.Done()
-
-	listener, err := net.Listen(proxy.Protocol, proxy.ListenAddr)
-	if err != nil {
-		log.Printf("PROXY: %v %v failed to start: %v", proxy.Protocol, proxy.ListenAddr, err)
-		return err
+func HandleHTTPProxy(w http.ResponseWriter, r *http.Request, targetAddr string) {
+	if !strings.HasPrefix(targetAddr, "http://") && !strings.HasPrefix(targetAddr, "https://") {
+		targetAddr = "http://" + targetAddr
 	}
-	defer listener.Close()
-	log.Printf("PROXY: %v %v server started", proxy.Protocol, proxy.ListenAddr)
 
-	var listenWG sync.WaitGroup
-
-	listenWG.Add(1)
-	go func() {
-		defer listenWG.Done()
-		for {
-			conn, err := listener.Accept()
-			if err != nil {
-				log.Printf("PROXY: %v %v failed to accept connection: %v", proxy.Protocol, proxy.ListenAddr, err)
-				if ne, ok := err.(*net.OpError); ok {
-					if ne.Op == "accept" && strings.Contains(ne.Error(), "use of closed network connection") {
-						log.Printf("PROXY: %v %v accept loop exiting, listener has been closed", proxy.Protocol, proxy.ListenAddr)
-						return
-					}
-				}
-				log.Printf("PROXY: %v %v failed to accept connection: %v", proxy.Protocol, proxy.ListenAddr, err)
-				continue
-			}
-
-			clientIP, _, err := net.SplitHostPort(conn.RemoteAddr().String())
-			if err != nil {
-				log.Printf("PROXY: Failed to parse client IP: %v", err)
-				continue
-			}
-
-			allowed := true
-			if fw.EnableFirewall {
-				allowed = fw.DefaultAllow
-				if !allowed {
-					allowed = firewall.CheckWhitelist(clientIP, conn)
-				}
-			}
-
-			if allowed {
-				log.Printf("PROXY: %v %v Starting proxy for %v to dest %v", proxy.Protocol, proxy.ListenAddr, clientIP, proxy.TargetAddr)
-				go handleProxyConnection(ctx, conn, proxy.TargetAddr, clientIP, proxy.Protocol)
-			} else {
-				log.Printf("PROXY: %v %v Blocked connection from: %v", proxy.Protocol, proxy.ListenAddr, clientIP)
-				conn.Close()
-			}
-		}
-	}()
-
-	<-ctx.Done()
-	stopServer(listener)
-	listenWG.Wait()
-	return nil
-}
-
-func stopServer(listener net.Listener) {
-	if err := listener.Close(); err != nil {
-		log.Printf("PROXY: Listen server shutdown error: %v", err)
+	target, err := url.Parse(targetAddr)
+	if err != nil {
+		log.Printf("HTTP PROXY: Invalid target URL: %v", err)
+		http.Error(w, "Bad Gateway", http.StatusBadGateway)
 		return
 	}
-	log.Printf("PROXY: Listen server shut down successfully")
+
+	// Create the reverse proxy
+	proxy := httputil.NewSingleHostReverseProxy(target)
+
+	// Customize the Director function to modify the request
+	//The Director will now call the old func and add our headers
+	originalDirector := proxy.Director
+	proxy.Director = func(req *http.Request) {
+		originalDirector(req)
+		req.Header.Set("X-Forwarded-Host", req.Host)
+		req.Header.Set("X-Origin-Host", target.Host)
+	}
+
+	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		log.Printf("HTTP PROXY: Error proxying request: %v", err)
+		http.Error(w, "Bad Gateway", http.StatusBadGateway)
+	}
+
+	clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		log.Printf("HTTP PROXY: Failed to parse client IP: %v", err)
+		clientIP = "ERROR"
+	}
+	log.Printf("HTTP PROXY: Forwarding request from %v to %v%v", clientIP, target.Host, r.URL.Path)
+
+	// Serve the request
+	proxy.ServeHTTP(w, r)
 }

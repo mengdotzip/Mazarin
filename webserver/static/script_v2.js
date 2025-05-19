@@ -11,6 +11,7 @@ async function authenticate(username, key) {
       key: key
     });
     
+    //send auth
     const response = await fetch('/auth', {
       method: 'POST',
       headers: {
@@ -23,7 +24,8 @@ async function authenticate(username, key) {
       console.error('Authentication failed');
       return false;
     }
-    
+  
+    //retun auth
     const data = await response.json();
     return data.status === 'success';
   } catch (error) {
@@ -33,14 +35,26 @@ async function authenticate(username, key) {
 }
 
 function connectSSE() {
+
+
   // Close any existing connection
   if (eventSource) {
     eventSource.close();
   }
-  
+
+  var lastDate = Date.now();
   eventSource = new EventSource('/sse');
   
   eventSource.onopen = function() {
+    //ping logic
+    const now = Date.now();
+    var ping = now - lastDate
+    ping = ping / 2
+    console.log(`Ping: ${ping}ms`);
+    pingDiv.textContent = `Ping: ${ping}ms`;
+    pingDiv.style.color = '#064a72';
+    //----
+
     messageDiv.textContent = 'Successfully authenticated!';
     messageDiv.style.color = 'green';
     dcButton.style.visibility = 'visible'
@@ -51,6 +65,7 @@ function connectSSE() {
     messageDiv.textContent = 'Connection error. Please try again.';
     messageDiv.style.color = 'red';
     dcButton.style.visibility = 'hidden'
+    pingDiv.textContent = ``;
     console.error('SSE connection error:', error);
     eventSource.close();
   };
@@ -62,15 +77,14 @@ function connectSSE() {
     messageDiv.textContent = 'Server shutting down... Disconnected';
     messageDiv.style.color = 'blue';
     dcButton.style.visibility = 'hidden'
+    pingDiv.textContent = ``;
   });
   
   eventSource.addEventListener("ping", function(event) {
-    const now = Date.now();
     const serverTimestamp = parseInt(event.data, 10);
-    const ping = now - serverTimestamp;
-    console.log(`Ping: ${ping}ms`);
-    pingDiv.textContent = `Ping: ${ping}ms`;
-    pingDiv.style.color = '#064a72';
+    console.log(`Ping: server timestamp: ${serverTimestamp}`);
+    /*pingDiv.textContent = `Ping: ${ping}ms`;
+    pingDiv.style.color = '#064a72';*/
   });
 }
 
@@ -104,6 +118,7 @@ dcButton.addEventListener('click', function() {
     messageDiv.textContent = 'Disconnected';
     messageDiv.style.color = 'blue';
     dcButton.style.visibility = 'hidden'
+    pingDiv.textContent = ``;
 });
 
 // Cleanup function for page unload
