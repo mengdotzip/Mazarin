@@ -12,15 +12,15 @@ import (
 	"strings"
 )
 
-var routes = make(map[string]config.RoutesConfig)
+var routes = make(map[string]config.ProxyConfig)
 
-func InitRouter(routConf []config.RoutesConfig) {
+func InitRouter(routConf []config.ProxyConfig) {
 	for _, route := range routConf {
 		AddRoute(route)
 	}
 }
 
-func AddRoute(routConf config.RoutesConfig) {
+func AddRoute(routConf config.ProxyConfig) {
 	routes[routConf.ListenUrl] = routConf
 }
 
@@ -95,7 +95,7 @@ func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *c
 			case "/auth":
 				webserver.AuthHandler(w, r)
 			case "/sse":
-				webserver.SseHandler(ctx, w, r)
+				webserver.SseHandler(ctx, webConf, w, r)
 			}
 		}
 	}

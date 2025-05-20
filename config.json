@@ -1,27 +1,25 @@
 {
   "proxies": [
     {
-      "listen_addr": ":80",
+      "port": ":80",
       "target_addr": "192.168.129.88:80",
       "protocol": "tcp"
+    },
+    {
+      "listen_url": "vault.domain.com",
+      "port": ":47319",
+      "target_addr": "192.168.129.88:80",
+      "type": "proxy",
+      "protocol": "web"
     }
-  ],
-  "router": [
-      {
-        "listen_url": "vault.meng.zip",
-        "port": ":47319",
-        "target_addr": "192.168.129.88:80",
-        "type": "proxy",
-        "protocol": "tcp"
-      }
   ],
   "tls": {
     "enable_tls": true,
     "cert_file": "./tls/domain.pem",
     "key_file": "./tls/priv.pem",
     "domains": [
-      "proxy.meng.zip",
-      "vault.meng.zip"
+      "proxy.domain.com",
+      "vault.domain.com"
     ]
   },
   "firewall": {
@@ -35,7 +33,7 @@
   "webserver": {
     "enable_webserver": true,
     "listen_port": ":47319",
-    "listen_url": "proxy.meng.zip",
+    "listen_url": "proxy.domain.com",
     "static_dir": "./static",
     "keys_dir": "./keys"
   }

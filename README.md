@@ -38,19 +38,17 @@ Create a `config.json` file (in the same path as main.go or the executable) with
 {
   "proxies": [
     {
-      "listen_addr": ":80",
+      "port": ":80",
       "target_addr": "192.168.129.88:80",
       "protocol": "tcp"
+    },
+    {
+      "listen_url": "vault.domain.com",
+      "port": ":47319",
+      "target_addr": "192.168.129.88:80",
+      "type": "proxy",
+      "protocol": "web"
     }
-  ],
-  "router": [
-      {
-        "listen_url": "vault.domain.com",
-        "port": ":47319",
-        "target_addr": "192.168.129.88:80",
-        "type": "proxy",
-        "protocol": "tcp"
-      }
   ],
   "tls": {
     "enable_tls": true,
@@ -82,21 +80,22 @@ Create a `config.json` file (in the same path as main.go or the executable) with
 
 ### Configuration Options
 
-- **proxies**: Array of proxy configurations
-    - `listen_addr`: The local address and port to listen on (e.g., ":80")
-    - `target_addr`: The destination address to forward traffic to
-    - `protocol`: Either "tcp" or "udp"
-- **router**: Array of routing configurations
-    - `listen_url`: Domain name to listen for (e.g., "vault.domain.com" or "192.168.0.10")
-    - `port`: Port to listen on
-    - `target_addr`: Target address for proxy routes
-    - `type`: Route type ("proxy" or "func")
-    - `protocol`: Protocol for proxy routes ("tcp" or "udp")
+- **proxies**: Array of proxy and routing configurations
+    - **TCP/UDP Proxies**:
+        - `port`: The local address and port to listen on (e.g., ":80")
+        - `target_addr`: The destination address to forward traffic to
+        - `protocol`: "tcp" or "udp"
+    - **Domain-based Web Routing**:
+        - `listen_url`: Domain name to listen for (e.g., "vault.domain.com")
+        - `port`: Port to listen on (e.g., ":47319")
+        - `target_addr`: Target address for proxy routes
+        - `type`: "proxy" (for HTTP reverse proxy) or "func" (for internal functions)
+        - `protocol`: "web" (required for domain-based routing)
 - **tls**: TLS/SSL configuration
     - `enable_tls`: Whether to enable TLS
     - `cert_file`: Path to certificate file
     - `key_file`: Path to private key file
-    - `domains`: Array of domains covered by the certificate (Note, dont forget to add the webserver url to here)
+    - `domains`: Array of domains covered by the certificate (must include all `listen_url` domains)
 - **firewall**:
     - `enable_firewall`: Whether to enable the firewall
     - `default_allow`: If true, allows all connections by default; if false, only allows whitelisted IPs
@@ -109,6 +108,9 @@ Create a `config.json` file (in the same path as main.go or the executable) with
     - `listen_url`: Domain name for the web interface
     - `static_dir`: Directory for static web files
     - `keys_dir`: Directory containing authentication keys
+
+**Note:** The webserver configuration is automatically added to the proxies array with a "web" protocol. If you want to access your web interface, make sure to include its domain name in the TLS domains list.
+
 
 3. **Set up authentication**
 

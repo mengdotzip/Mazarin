@@ -11,13 +11,6 @@ import (
 
 // ----
 type ProxyConfig struct {
-	ListenAddr string `json:"listen_addr"`
-	TargetAddr string `json:"target_addr"`
-	Protocol   string `json:"protocol"`
-}
-
-// ----
-type RoutesConfig struct {
 	ListenUrl  string `json:"listen_url"`
 	Port       string `json:"port"`
 	TargetAddr string `json:"target_addr"`
@@ -58,7 +51,6 @@ type LoggingConfig struct {
 // ----
 type Config struct {
 	Proxy     []ProxyConfig   `json:"proxies"`
-	Router    []RoutesConfig  `json:"router"`
 	TLS       TLSConfig       `json:"tls"`
 	Firewall  FirewallConfig  `json:"firewall"`
 	Logging   LoggingConfig   `json:"logging"`

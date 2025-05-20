@@ -18,13 +18,13 @@ import (
 func ListenProxy(ctx context.Context, fw *config.FirewallConfig, proxyConf *config.ProxyConfig, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
-	listener, err := net.Listen(proxyConf.Protocol, proxyConf.ListenAddr)
+	listener, err := net.Listen(proxyConf.Protocol, proxyConf.Port)
 	if err != nil {
-		log.Printf("PROXY: %v %v failed to start: %v", proxyConf.Protocol, proxyConf.ListenAddr, err)
+		log.Printf("PROXY: %v %v failed to start: %v", proxyConf.Protocol, proxyConf.Port, err)
 		return err
 	}
 	defer listener.Close()
-	log.Printf("PROXY: %v %v server started", proxyConf.Protocol, proxyConf.ListenAddr)
+	log.Printf("PROXY: %v %v server started", proxyConf.Protocol, proxyConf.Port)
 
 	var listenWG sync.WaitGroup
 
@@ -34,14 +34,14 @@ func ListenProxy(ctx context.Context, fw *config.FirewallConfig, proxyConf *conf
 		for {
 			conn, err := listener.Accept()
 			if err != nil {
-				log.Printf("PROXY: %v %v failed to accept connection: %v", proxyConf.Protocol, proxyConf.ListenAddr, err)
+				log.Printf("PROXY: %v %v failed to accept connection: %v", proxyConf.Protocol, proxyConf.Port, err)
 				if ne, ok := err.(*net.OpError); ok {
 					if ne.Op == "accept" && strings.Contains(ne.Error(), "use of closed network connection") {
-						log.Printf("PROXY: %v %v accept loop exiting, listener has been closed", proxyConf.Protocol, proxyConf.ListenAddr)
+						log.Printf("PROXY: %v %v accept loop exiting, listener has been closed", proxyConf.Protocol, proxyConf.Port)
 						return
 					}
 				}
-				log.Printf("PROXY: %v %v failed to accept connection: %v", proxyConf.Protocol, proxyConf.ListenAddr, err)
+				log.Printf("PROXY: %v %v failed to accept connection: %v", proxyConf.Protocol, proxyConf.Port, err)
 				continue
 			}
 
@@ -50,13 +50,6 @@ func ListenProxy(ctx context.Context, fw *config.FirewallConfig, proxyConf *conf
 				log.Printf("PROXY: Failed to parse client IP: %v", err)
 				continue
 			}
-
-			//INSERT ROUTER CODE
-			//If the router is on, hand off the work and continue the for loop
-			/*if routerConf.EnableRouter {
-				router.Route(conn)
-				continue
-			}*/
 
 			allowed := true
 			if fw.EnableFirewall {
@@ -67,10 +60,10 @@ func ListenProxy(ctx context.Context, fw *config.FirewallConfig, proxyConf *conf
 			}
 
 			if allowed {
-				log.Printf("PROXY: %v %v Starting proxy for %v to dest %v", proxyConf.Protocol, proxyConf.ListenAddr, clientIP, proxyConf.TargetAddr)
+				log.Printf("PROXY: %v %v Starting proxy for %v to dest %v", proxyConf.Protocol, proxyConf.Port, clientIP, proxyConf.TargetAddr)
 				go proxy.HandleProxyConnection(ctx, conn, proxyConf.TargetAddr, clientIP, proxyConf.Protocol)
 			} else {
-				log.Printf("PROXY: %v %v Blocked connection from: %v", proxyConf.Protocol, proxyConf.ListenAddr, clientIP)
+				log.Printf("PROXY: %v %v Blocked connection from: %v", proxyConf.Protocol, proxyConf.Port, clientIP)
 				conn.Close()
 			}
 		}
@@ -84,7 +77,7 @@ func ListenProxy(ctx context.Context, fw *config.FirewallConfig, proxyConf *conf
 
 //WEB LISTEN----------
 
-func ListenWebTLS(parentCtx context.Context, tlsConf *config.TLSConfig, fw *config.FirewallConfig, srv *config.RoutesConfig, webConf *config.WebserverConfig, wg *sync.WaitGroup) {
+func ListenWebTLS(parentCtx context.Context, tlsConf *config.TLSConfig, fw *config.FirewallConfig, srv *config.ProxyConfig, webConf *config.WebserverConfig, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	ctx, cancel := context.WithCancel(parentCtx)
@@ -122,7 +115,7 @@ func ListenWebTLS(parentCtx context.Context, tlsConf *config.TLSConfig, fw *conf
 
 	mux := http.NewServeMux()
 	server := &http.Server{
-		//ReadTimeout:  5 * time.Second,
+		//ReadTimeout:  5 * time.Second, Sadly the SSE doesnt allow these
 		//WriteTimeout: 5 * time.Second,
 		IdleTimeout: 40 * time.Second,
 		TLSConfig:   cfg,
@@ -149,7 +142,7 @@ func ListenWebTLS(parentCtx context.Context, tlsConf *config.TLSConfig, fw *conf
 	listenForExit(ctx, server, &webWG)
 }
 
-func ListenWeb(parentCtx context.Context, tlsConf *config.TLSConfig, fw *config.FirewallConfig, srv *config.RoutesConfig, webConf *config.WebserverConfig, wg *sync.WaitGroup) {
+func ListenWeb(parentCtx context.Context, tlsConf *config.TLSConfig, fw *config.FirewallConfig, srv *config.ProxyConfig, webConf *config.WebserverConfig, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	ctx, cancel := context.WithCancel(parentCtx)

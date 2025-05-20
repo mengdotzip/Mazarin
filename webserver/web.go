@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"mazarin/config"
 	"mazarin/firewall"
 	"mazarin/state"
 	"net"
@@ -89,7 +90,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func SseHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func SseHandler(ctx context.Context, webConf *config.WebserverConfig, w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
@@ -122,7 +123,7 @@ func SseHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*") //Put your domain here <3
+	w.Header().Set("Access-Control-Allow-Origin", webConf.ListenURL)
 
 	fmt.Fprintf(w, ":ok\n\n") // Flush headers
 	flusher.Flush()

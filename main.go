@@ -22,7 +22,7 @@ import (
 )
 
 func main() {
-	fmt.Println("v0.0.5")
+	fmt.Println("v0.0.6")
 
 	//cmd flag, Generate hashed key and exit.
 	shouldExit := parseArgs()
@@ -49,20 +49,21 @@ func main() {
 		defer cfg.Logging.Close()
 	}
 
-	if len(cfg.Router) > 0 {
+	/*if len(cfg.Router) > 0 {
 		router.InitRouter(cfg.Router)
-	}
+	}*/
 
 	var wg sync.WaitGroup
 
 	if cfg.Webserver.EnableWebServer {
-		webRoute := config.RoutesConfig{
+		webRoute := config.ProxyConfig{
 			ListenUrl: cfg.Webserver.ListenURL,
 			Port:      cfg.Webserver.ListenPort,
 			Type:      "func",
+			Protocol:  "web",
 		}
-		router.AddRoute(webRoute)
-		cfg.Router = append(cfg.Router, webRoute)
+		//router.AddRoute(webRoute)
+		cfg.Proxy = append(cfg.Proxy, webRoute)
 		webserver.Init(webserver.LoadKeys(cfg.Webserver.KeysDir))
 	}
 	//-----
@@ -70,7 +71,51 @@ func main() {
 	//Start listen servers
 	var usedPortsProxy []string
 	var usedPortsRouter []string
+	var toBeRouted []config.ProxyConfig
 	for _, srvs := range cfg.Proxy {
+		//web
+		if srvs.Protocol == "web" {
+			if slices.Contains(usedPortsProxy, srvs.Port) {
+				log.Println("ROUTER ERROR: Cant have a tcp/udp proxy and a web proxy on the same port, both need to be web proxies.")
+				stop()
+				break
+			}
+			toBeRouted = append(toBeRouted, srvs)
+			if !slices.Contains(usedPortsRouter, srvs.Port) {
+				usedPortsRouter = append(usedPortsRouter, srvs.Port)
+				if cfg.TLS.EnableTLS && slices.Contains(cfg.TLS.Domains, srvs.ListenUrl) {
+					wg.Add(1)
+					go listeners.ListenWebTLS(ctx, &cfg.TLS, &cfg.Firewall, &srvs, &cfg.Webserver, &wg)
+					continue
+				}
+				wg.Add(1)
+				go listeners.ListenWeb(ctx, &cfg.TLS, &cfg.Firewall, &srvs, &cfg.Webserver, &wg) //The web listen func handles its own ctx stop
+			}
+			continue
+		}
+
+		//non web
+		if slices.Contains(usedPortsProxy, srvs.Port) {
+			log.Println("PROXY ERROR: Cant have multiple tcp/udp proxies on the same port, use web for this.")
+			stop()
+			break
+		}
+		usedPortsProxy = append(usedPortsProxy, srvs.Port)
+		wg.Add(1)
+		go func() {
+			if err := listeners.ListenProxy(ctx, &cfg.Firewall, &srvs, &wg); err != nil {
+				log.Println("Proxy server failed starting up, starting a shutdown")
+				stop() //Signal with the main ctx to start a clean shutdown
+			}
+		}()
+	}
+
+	if len(toBeRouted) > 0 {
+		router.InitRouter(toBeRouted)
+	}
+	//var usedPortsProxy []string
+	//var usedPortsRouter []string
+	/*for _, srvs := range cfg.Proxy {
 		if slices.Contains(usedPortsProxy, srvs.ListenAddr) {
 			log.Println("PROXY ERROR: Cant have multiple proxies on the same port, use the router for this.")
 			stop()
@@ -103,7 +148,7 @@ func main() {
 			wg.Add(1)
 			go listeners.ListenWeb(ctx, &cfg.TLS, &cfg.Firewall, &srvs, &cfg.Webserver, &wg) //The web listen func handles its own ctx stop
 		}
-	}
+	} */
 	//-----
 
 	//Clean shutdown portion
