@@ -77,7 +77,7 @@ func ListenProxy(ctx context.Context, fw *config.FirewallConfig, proxyConf *conf
 
 //WEB LISTEN----------
 
-func ListenWebTLS(parentCtx context.Context, tlsConf *config.TLSConfig, fw *config.FirewallConfig, srv *config.ProxyConfig, webConf *config.WebserverConfig, wg *sync.WaitGroup) {
+func ListenWebTLS(parentCtx context.Context, tlsConf *config.TLSConfig, fw *config.FirewallConfig, srv *config.ParsedProxy, webConf *config.WebserverConfig, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	ctx, cancel := context.WithCancel(parentCtx)
@@ -131,7 +131,7 @@ func ListenWebTLS(parentCtx context.Context, tlsConf *config.TLSConfig, fw *conf
 	go func() {
 		defer webWG.Done()
 
-		log.Printf("HTTPS Listener: %v %v server started", srv.ListenUrl, srv.Port)
+		log.Printf("HTTPS Listener: %v server started", srv.Port)
 		err := server.ListenAndServeTLS(tlsConf.Cert, tlsConf.Key)
 		if err != nil && err != http.ErrServerClosed {
 			log.Printf("HTTPS Listener: ListenAndServeTLS error: %v", err)

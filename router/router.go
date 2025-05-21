@@ -16,12 +16,8 @@ var routes = make(map[string]config.ProxyConfig)
 
 func InitRouter(routConf []config.ProxyConfig) {
 	for _, route := range routConf {
-		AddRoute(route)
+		routes[route.ListenUrl] = route
 	}
-}
-
-func AddRoute(routConf config.ProxyConfig) {
-	routes[routConf.ListenUrl] = routConf
 }
 
 func RouteWithCfg(ctx context.Context, webConf *config.WebserverConfig, firewallConf *config.FirewallConfig) http.HandlerFunc {

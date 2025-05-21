@@ -2,13 +2,16 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 )
 
+// CONFIG
 // ----
 type ProxyConfig struct {
 	ListenUrl  string `json:"listen_url"`
@@ -75,6 +78,9 @@ func LoadConfig() (Config, error) {
 	return cfg, nil
 }
 
+//-----------
+
+// /Logging
 func (conf *LoggingConfig) InitLog() {
 	logDir := conf.LogDir
 	fmt.Println("Logging starting in the dir: ", logDir)
@@ -115,4 +121,64 @@ func (conf *LoggingConfig) Close() error {
 		return conf.logFile.Close()
 	}
 	return nil
+}
+
+// parsing
+type ParsedProxy struct {
+	Port          string
+	Protocol      string
+	TLS           bool
+	LinkedProxies []*ProxyConfig
+}
+
+func ParseProxies(toParse []ProxyConfig, tlsConf *TLSConfig) (map[string]ParsedProxy, []ProxyConfig, error) {
+	parsedProxyMap := make(map[string]ParsedProxy)
+	var toBeRouted []ProxyConfig
+	for _, proxies := range toParse {
+		switch proxies.Protocol {
+		case "web":
+			toBeRouted = append(toBeRouted, proxies)
+			allowed, ok := parsedProxyMap[proxies.Port]
+			if ok {
+				if allowed.Protocol != "web" {
+					return parsedProxyMap, toBeRouted, errors.New("PARSER ERROR: Cant have a tcp/udp proxy and a web proxy on the same port, both need to be web proxies")
+				}
+				if tlsConf.EnableTLS && slices.Contains(tlsConf.Domains, proxies.ListenUrl) && !allowed.TLS {
+					return parsedProxyMap, toBeRouted, errors.New("PARSER ERROR: Cant have a http and https proxy on the same port")
+				}
+				if allowed.TLS && !slices.Contains(tlsConf.Domains, proxies.ListenUrl) {
+					return parsedProxyMap, toBeRouted, errors.New("PARSER ERROR: Cant have a https and http proxy on the same port")
+				}
+
+				allowed.LinkedProxies = append(allowed.LinkedProxies, &proxies)
+				continue
+			}
+
+			newProxy := ParsedProxy{
+				Port:     proxies.Port,
+				Protocol: proxies.Protocol,
+				TLS:      slices.Contains(tlsConf.Domains, proxies.ListenUrl),
+			}
+			newProxy.LinkedProxies = append(newProxy.LinkedProxies, &proxies) //could find how to define the array in the struct creation
+			parsedProxyMap[newProxy.Port] = newProxy
+
+		case "tcp", "udp":
+			allowed, ok := parsedProxyMap[proxies.Port]
+			if ok {
+				if allowed.Protocol != "tcp/udp" {
+					return parsedProxyMap, toBeRouted, errors.New("PARSER ERROR: Cant have a tcp/udp proxy and a web proxy on the same port, both need to be web proxies")
+				}
+				return parsedProxyMap, toBeRouted, errors.New("PARSER ERROR: Cant have multiple tcp/udp proxies on the same port, use type: web for this")
+			}
+
+			newProxy := ParsedProxy{
+				Port:     proxies.Port,
+				Protocol: "tcp/udp",
+			}
+			newProxy.LinkedProxies = append(newProxy.LinkedProxies, &proxies)
+			parsedProxyMap[newProxy.Port] = newProxy
+
+		}
+	}
+	return parsedProxyMap, toBeRouted, nil
 }
