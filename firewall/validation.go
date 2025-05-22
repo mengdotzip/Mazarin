@@ -28,10 +28,6 @@ func ValidateInput(input string, inputType InputType) bool {
 	if strings.Contains(input, "\x00") {
 		return false
 	}
-	//no escaping out of the static folder
-	if strings.Contains(input, "..") {
-		return false
-	}
 
 	switch inputType {
 	case TypeUsername:
@@ -39,6 +35,10 @@ func ValidateInput(input string, inputType InputType) bool {
 	case TypePassword:
 		return PasswordPattern.MatchString(input)
 	case TypePath:
+		//no escaping out of the static folder
+		if strings.Contains(input, "..") {
+			return false
+		}
 		return PathPattern.MatchString(input)
 	case TypeURL:
 		return UrPattern.MatchString(input)

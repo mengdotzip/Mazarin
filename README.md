@@ -36,25 +36,7 @@ Create a `config.json` file. Please check out the [DOCS](docs/README.md) for the
 
 3. **Set up authentication**
 
-Create a `keys.json` file in your keys directory:
-
-```json
-{
-  "users": [
-      {
-        "name": "test",
-        "hash": "$2a$10$f.qQVxQMikTkKZWYekqYfOi17O8f1/83HA5CX8TADYtQGhHmptZha",
-        "allowed_sessions": 1
-      },
-      {
-        "name": "user2",
-        "hash": "$2a$10$Z1/wTrjFwzWaC60CwQYgVe.M7hcKr0YESo2G6etOSInxkklltcfIO", 
-        "allowed_sessions": 1
-      }
-  ]
-}
-```
-(In this example the password for test is test_password and for user2 is user2_password)
+Create a `keys.json` file in your keys directory. Please check out the [DOCS](docs/authentication.md) for the json format.
 
 4. **Generate hashed keys**
 ```bash

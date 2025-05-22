@@ -3,6 +3,8 @@
 Below you will find a full config.json file of Mazarin, you should be able to find every config option here with explanation. Please check out our other examples in this folder if you need any clarification.<br>
 (Note: You only need to config what you need eg; a config.json file with just "proxies" will work.)
 
+Click [`HERE`](authentication.md) for the keys and authentication setup.
+
 Create a `config.json` file (in the same path as main.go or the executable) with the following structure:
 
 ```json
@@ -19,6 +21,15 @@ Create a `config.json` file (in the same path as main.go or the executable) with
       "target_addr": "192.168.129.88:80",
       "type": "proxy",
       "protocol": "web"
+    },
+    {
+      "listen_url": "proxmox.domain.com",
+      "port": ":47319",
+      "target_addr": "192.168.129.8806",
+      "type": "proxy",
+      "protocol": "web",
+      "allow_insecure": true,
+      "no_headers": true
     }
   ],
   "tls": {
@@ -62,6 +73,8 @@ Create a `config.json` file (in the same path as main.go or the executable) with
         - `target_addr`: Target address for proxy routes
         - `type`: "proxy" (for HTTP reverse proxy) or "func" (for internal functions)
         - `protocol`: "web" (required for domain-based routing)
+        - `allow_insecure`: Allow insecure/self signed certificates (be ware of the dangers)
+        - `no_headers`: Dont let Mazarin set secure headers
 - **tls**: TLS/SSL configuration
     - `enable_tls`: Whether to enable TLS
     - `cert_file`: Path to certificate file
@@ -81,33 +94,3 @@ Create a `config.json` file (in the same path as main.go or the executable) with
     - `keys_dir`: Directory containing authentication keys
 
 **Note:** The webserver configuration is automatically added to the proxies array with a "web" protocol. If you want to access your web interface, make sure to include its domain name in the TLS domains list.
-
-
-3. **Set up authentication**
-
-Create a `keys.json` file in your keys directory:
-
-```json
-{
-  "users": [
-      {
-        "name": "test",
-        "hash": "$2a$10$f.qQVxQMikTkKZWYekqYfOi17O8f1/83HA5CX8TADYtQGhHmptZha",
-        "allowed_sessions": 1
-      },
-      {
-        "name": "user2",
-        "hash": "$2a$10$Z1/wTrjFwzWaC60CwQYgVe.M7hcKr0YESo2G6etOSInxkklltcfIO", 
-        "allowed_sessions": 1
-      }
-  ]
-}
-```
-(In this example the password for test is test_password and for user2 is user2_password)
-
-4. **Generate hashed keys**
-```bash
-go run main.go -key yourpassword
-```
-
-Use the output hash in your `keys.json` for authentication.
