@@ -14,11 +14,13 @@ import (
 // CONFIG
 // ----
 type ProxyConfig struct {
-	ListenUrl  string `json:"listen_url"`
-	Port       string `json:"port"`
-	TargetAddr string `json:"target_addr"`
-	Type       string `json:"type"`
-	Protocol   string `json:"protocol"`
+	ListenUrl     string `json:"listen_url"`
+	Port          string `json:"port"`
+	TargetAddr    string `json:"target_addr"`
+	Type          string `json:"type"`
+	Protocol      string `json:"protocol"`
+	AllowInsecure bool   `json:"allow_insecure"`
+	NoHeaders     bool   `json:"no_headers"`
 }
 
 // ----

@@ -2,7 +2,9 @@ package webserver
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
+	"mazarin/firewall"
 	"os"
 
 	"golang.org/x/crypto/bcrypt"
@@ -36,6 +38,9 @@ func LoadKeys(fileDir string) *UsersData {
 }
 
 func HashKey(key string) (string, error) {
+	if !firewall.ValidateInput(key, "password") {
+		return "", errors.New("ERROR: Invalid password format. Only use letters,numbers and these symbols: _:/?#@!$&'()*+,;=- Between 12 and 64 characters")
+	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(key), bcrypt.DefaultCost)
 	return string(hash), err
 }

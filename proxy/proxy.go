@@ -2,8 +2,10 @@ package proxy
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"log"
+	"mazarin/config"
 	"mazarin/state"
 	"net"
 	"net/http"
@@ -69,12 +71,16 @@ func HandleProxyConnection(ctx context.Context, clientConn net.Conn, targetAddr,
 	wg.Wait()
 }
 
-func HandleHTTPProxy(w http.ResponseWriter, r *http.Request, targetAddr string) {
-	if !strings.HasPrefix(targetAddr, "http://") && !strings.HasPrefix(targetAddr, "https://") {
-		targetAddr = "http://" + targetAddr
+func HandleHTTPProxy(w http.ResponseWriter, r *http.Request, template *config.ProxyConfig) {
+	if !strings.HasPrefix(template.TargetAddr, "http://") && !strings.HasPrefix(template.TargetAddr, "https://") {
+		if template.AllowInsecure {
+			template.TargetAddr = "https://" + template.TargetAddr
+		} else {
+			template.TargetAddr = "http://" + template.TargetAddr
+		}
 	}
 
-	target, err := url.Parse(targetAddr)
+	target, err := url.Parse(template.TargetAddr)
 	if err != nil {
 		log.Printf("HTTP PROXY: Invalid target URL: %v", err)
 		http.Error(w, "Bad Gateway", http.StatusBadGateway)
@@ -83,6 +89,12 @@ func HandleHTTPProxy(w http.ResponseWriter, r *http.Request, targetAddr string) 
 
 	// Create the reverse proxy
 	proxy := httputil.NewSingleHostReverseProxy(target)
+
+	if template.AllowInsecure && strings.HasPrefix(template.TargetAddr, "https://") { //allow insecure https connections ONLY USE THIS IN DEV PLEASE
+		proxy.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+	}
 
 	// Customize the Director function to modify the request
 	//The Director will now call the old func and add our headers

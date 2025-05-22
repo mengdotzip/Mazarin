@@ -11,6 +11,15 @@
       "target_addr": "192.168.129.88:80",
       "type": "proxy",
       "protocol": "web"
+    },
+    {
+      "listen_url": "vault.domain.com",
+      "port": ":47319",
+      "target_addr": "192.168.129.88:80",
+      "type": "proxy",
+      "protocol": "web",
+      "allow_insecure": true,
+      "no_headers": true
     }
   ],
   "tls": {

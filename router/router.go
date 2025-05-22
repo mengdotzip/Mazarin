@@ -27,18 +27,6 @@ func RouteWithCfg(ctx context.Context, webConf *config.WebserverConfig, firewall
 }
 
 func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *config.FirewallConfig, w http.ResponseWriter, r *http.Request) {
-	//--Set secure headers---
-	//ONLY SET HEADERS FOR WEB, might have to change this to a sperate func in the future
-	//Only set HSTS if using HTTPS
-	if r.TLS != nil {
-		w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
-	}
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.Header().Set("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'")
-	w.Header().Set("Referrer-Policy", "no-referrer")
-	w.Header().Set("Permissions-Policy", "geolocation=(), camera=(), microphone=()") //IMPORTANT, if a proxied site needs these then you might want to disable this
-	//-------
-
 	reqHost := strings.Split(strings.ToLower(r.Host), ":") //TODO check what happens on ipv6
 
 	//FIREWALL
@@ -59,6 +47,17 @@ func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *c
 			}
 		}
 	}
+
+	if !firewall.ValidateInput(r.URL.Path, "path") {
+		log.Printf("ROUTER: IP: %v invalid path", clientIP)
+		http.Error(w, "Domain does not exist", http.StatusBadRequest)
+		return
+	}
+	if !firewall.ValidateInput(reqHost[0], "url") {
+		log.Printf("ROUTER: IP: %v invalid url", clientIP)
+		http.Error(w, "Domain does not exist", http.StatusBadRequest)
+		return
+	}
 	//------
 
 	//ROUTING
@@ -69,10 +68,24 @@ func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *c
 		return
 	}
 
+	if !routeInfo.NoHeaders {
+		//--Set secure headers---
+		//ONLY SET HEADERS FOR WEB, might have to change this to a sperate func in the future
+		//Only set HSTS if using HTTPS
+		if r.TLS != nil {
+			w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+		}
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'")
+		w.Header().Set("Referrer-Policy", "no-referrer")
+		w.Header().Set("Permissions-Policy", "geolocation=(), camera=(), microphone=()") //IMPORTANT, if a proxied site needs these then you might want to disable this
+		//-------
+	}
+
 	log.Printf("ROUTER: IP %v getting routed to %v", clientIP, routeInfo.TargetAddr)
 	switch routeInfo.Type {
 	case "proxy":
-		proxy.HandleHTTPProxy(w, r, routeInfo.TargetAddr)
+		proxy.HandleHTTPProxy(w, r, &routeInfo)
 	case "static":
 	case "redirect":
 	case "func":

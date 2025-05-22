@@ -10,7 +10,6 @@ import (
 	"mazarin/state"
 	"net"
 	"net/http"
-	"regexp"
 	"time"
 )
 
@@ -43,12 +42,18 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validChars := regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`) //64 char limit
-	if !validChars.MatchString(authReq.Username) || !validChars.MatchString(authReq.Key) {
+	if !firewall.ValidateInput(authReq.Username, "username") {
+		log.Printf("WEBSERVER: Client IP %v invalid username characters", clientIP)
+		http.Error(w, "Invalid characters in input", http.StatusBadRequest)
+		return
+	}
+	if !firewall.ValidateInput(authReq.Key, "password") {
+		log.Printf("WEBSERVER: Client IP %v invalid password characters", clientIP)
 		http.Error(w, "Invalid characters in input", http.StatusBadRequest)
 		return
 	}
 
+	//TODO change this to a map
 	authenticated := false
 	for _, users := range userData.Users {
 		if authReq.Username == users.Name {
