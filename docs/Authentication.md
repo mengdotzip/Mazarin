@@ -1,6 +1,7 @@
 # Keys & Authentication
 
-## Generate Hashed Key
+### Generate Hashed Key
+---
 
 ```bash
 go run main.go -key yourpassword
@@ -8,7 +9,9 @@ go run main.go -key yourpassword
 
 Use the output hash in your `keys.json` for authentication.
 
-## Keys.JSON format
+### Keys.JSON format
+---
+
 Create a `keys.json` file in your (webserver) keys directory.
 
 Example (default [`file`](../keys.json) from Mazarin):

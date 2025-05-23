@@ -90,7 +90,7 @@ Create a `config.json` file (in the same path as main.go or the executable) with
     - `enable_webserver`: Whether to enable the web interface
     - `listen_port`: Port for the web interface
     - `listen_url`: Domain name for the web interface
-    - `static_dir`: Directory for static web files
+    - `static_dir`: Directory for static web files (you can find them [`here`](../webserver/static))
     - `keys_dir`: Directory containing authentication keys
 
 **Note:** The webserver configuration is automatically added to the proxies array with a "web" protocol. If you want to access your web interface, make sure to include its domain name in the TLS domains list.
