@@ -3,7 +3,7 @@
 Below you will find a full config.json file of Mazarin, you should be able to find every config option here with explanation. Please check out our other examples in this folder if you need any clarification.<br>
 (Note: You only need to config what you need eg; a config.json file with just "proxies" will work.)
 
-Click [`HERE`](authentication.md) for the keys and authentication setup.
+Click [`HERE`](Authentication.md) for the keys and authentication setup.
 
 Create a `config.json` file (in the same path as main.go or the executable) with the following structure:
 

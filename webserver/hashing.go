@@ -20,7 +20,9 @@ type UsersData struct {
 	Users []User `json:"users"`
 }
 
-func LoadKeys(fileDir string) *UsersData {
+func LoadKeys(fileDir string) map[string]User {
+	var usersMap = make(map[string]User)
+
 	data, err := os.ReadFile(fileDir + "/keys.json")
 	if err != nil {
 		log.Println("HASHING: LoadKeys error ", err)
@@ -34,7 +36,16 @@ func LoadKeys(fileDir string) *UsersData {
 		return nil
 	}
 
-	return &usersData
+	for _, users := range usersData.Users {
+		_, ok := usersMap[users.Name]
+		if ok {
+			log.Printf("HASHING: Cant have two users named '%v' ", users.Name)
+			return nil
+		}
+		usersMap[users.Name] = users
+	}
+
+	return usersMap
 }
 
 func HashKey(key string) (string, error) {
