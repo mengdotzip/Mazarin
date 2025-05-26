@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var userData *UsersData
+var userData map[string]User
 
 type AuthRequest struct {
 	Username string `json:"username"`
@@ -53,29 +53,20 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO change this to a map
-	authenticated := false
-	for _, users := range userData.Users {
-		if authReq.Username == users.Name {
-			auth, err := validateUserHash(authReq.Key, users.Hash)
-			if err != nil {
-				log.Printf("WEBSERVER: Input validation failed from IP %v: %v", clientIP, err)
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			if auth {
-				authenticated = true
-				break
-			} else {
-				log.Printf("WEBSERVER: Invalid login from IP %v with username %v", clientIP, users.Name)
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
-		}
-	}
-
-	if !authenticated {
+	user, ok := userData[authReq.Username]
+	if !ok {
 		log.Printf("WEBSERVER: User not found: %v from IP %v", authReq.Username, clientIP)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	auth, err := validateUserHash(authReq.Key, user.Hash)
+	if err != nil {
+		log.Printf("WEBSERVER: Hash input validation failed from IP %v: %v", clientIP, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !auth {
+		log.Printf("WEBSERVER: Invalid login from IP %v with username %v", clientIP, user.Name)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -197,7 +188,7 @@ func sendPing(w http.ResponseWriter, flusher http.Flusher) error {
 	return nil
 }
 
-func Init(uD *UsersData) {
+func Init(uD map[string]User) {
 	userData = uD
 
 }
