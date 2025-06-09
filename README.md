@@ -36,7 +36,7 @@ Create a `config.json` file. Please check out the [DOCS](docs/README.md) for the
 
 3. **Set up authentication**
 
-Create a `keys.json` file in your keys directory. Please check out the [DOCS](docs/authentication.md) for the json format.
+Create a `keys.json` file in your keys directory. Please check out the [DOCS](docs/Authentication.md) for the json format.
 
 4. **Generate hashed keys**
 ```bash

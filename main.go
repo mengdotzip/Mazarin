@@ -68,8 +68,8 @@ func main() {
 	for _, srv := range listenerMap {
 		switch srv.Protocol {
 		case "web":
+			wg.Add(1)
 			if !srv.TLS {
-				wg.Add(1)
 				go listeners.ListenWeb(ctx, &cfg.TLS, &cfg.Firewall, srv.LinkedProxies[0], &cfg.Webserver, &wg)
 				continue
 			}
