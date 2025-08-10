@@ -25,7 +25,7 @@ async function authenticate(username, key) {
       return false;
     }
   
-    //retun auth
+    //return auth
     const data = await response.json();
     return data.status === 'success';
   } catch (error) {

@@ -26,7 +26,7 @@ Since then, Mazarin has evolved into a more robust proxy server with domain rout
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/Maty-0/Mazarin.git
+git clone https://github.com/mengdotzip/Mazarin.git
 cd mazarin
 ```
 

@@ -56,7 +56,7 @@ A more secure way of setting up a game server proxy is by enabling the webserver
 - **Webserver:** Hosts the authentication portal so users can log in and be granted access.
   - **Static Content:** If you need the contents of the static folder for the web interface, you can find them at [`/webserver/static`](../webserver/static).
 
-In a prod environment you will want to make sure the webserver is also running TLS, you can easely configure this by writing:
+In a prod environment you will want to make sure the webserver is also running TLS, you can configure this by writing:
 
 ```json
 {

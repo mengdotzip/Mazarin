@@ -41,7 +41,7 @@ func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *c
 		//Add blacklist/whitelist here in the future
 		if !firewallConf.DefaultAllow {
 			if !firewall.CheckWhitelist(clientIP) && reqHost[0] != webConf.ListenURL { //Make sure the router still allows the proxy auth page to load :p
-				log.Printf("ROUTER: IP: %v access dennied for: %v", clientIP, reqHost[0])
+				log.Printf("ROUTER: IP: %v access denied for: %v", clientIP, reqHost[0])
 				http.Error(w, "Proxy Authentication Required", http.StatusProxyAuthRequired)
 				return
 			}

@@ -7,7 +7,7 @@ import (
 
 type InputType string
 
-// decalre const instead of writing "string" in the switch case, might change other switch statements to this for security
+// declare const instead of writing "string" in the switch case, might change other switch statements to this for security
 const (
 	TypeUsername InputType = "username"
 	TypePassword InputType = "password"
@@ -19,7 +19,7 @@ const (
 var (
 	UsernamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
 	PasswordPattern = regexp.MustCompile(`^[a-zA-Z0-9._:/?#@!$&'()*+,;=-]{12,64}$`)
-	UrPattern       = regexp.MustCompile(`^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
+	UrlPattern      = regexp.MustCompile(`^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 	PathPattern     = regexp.MustCompile(`^[a-zA-Z0-9\s._~:/?#[\]@!$&'()*+,;=-]*$`)
 )
 
@@ -41,7 +41,7 @@ func ValidateInput(input string, inputType InputType) bool {
 		}
 		return PathPattern.MatchString(input)
 	case TypeURL:
-		return UrPattern.MatchString(input)
+		return UrlPattern.MatchString(input)
 	default:
 		return false
 	}

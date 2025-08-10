@@ -60,7 +60,7 @@ func main() {
 	//-----
 
 	//Start listen servers
-	listenerMap, toBeRouted, err := config.ParseProxies(cfg.Proxy, &cfg.TLS) //I really  like how I propegate the error here, I will do this more often probably
+	listenerMap, toBeRouted, err := config.ParseProxies(cfg.Proxy, &cfg.TLS) //I really  like how I propagate the error here, I will do this more often probably
 	if err != nil {
 		log.Println(err)
 		return
