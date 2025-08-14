@@ -62,7 +62,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	auth, err := validateUserHash(authReq.Key, user.Hash)
 	if err != nil {
 		log.Printf("WEBSERVER: Hash input validation failed from IP %v: %v", clientIP, err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Invalid credentials", http.StatusBadRequest)
 		return
 	}
 	if !auth {

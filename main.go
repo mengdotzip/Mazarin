@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	fmt.Println("v0.0.7")
+	fmt.Println("v0.0.8")
 
 	//cmd flag, Generate hashed key and exit.
 	shouldExit := parseArgs()

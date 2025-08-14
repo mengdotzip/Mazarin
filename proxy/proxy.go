@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 )
@@ -119,4 +120,18 @@ func HandleHTTPProxy(w http.ResponseWriter, r *http.Request, template *config.Pr
 
 	// Serve the request
 	proxy.ServeHTTP(w, r)
+}
+
+func HandleStaticServe(w http.ResponseWriter, r *http.Request, routeInfo *config.ProxyConfig) {
+
+	requestedRoute := routeInfo.TargetAddr + r.URL.Path
+	_, err := os.Stat(requestedRoute)
+	if err != nil {
+		log.Printf("PROXY: Static serve route does not exist %v", requestedRoute)
+		http.Error(w, "Route does not exist", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("DEBUG: the static serve route is %v", requestedRoute)
+	http.ServeFile(w, r, requestedRoute)
 }

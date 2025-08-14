@@ -16,6 +16,13 @@ Create a `config.json` file (in the same path as main.go or the executable) with
       "protocol": "tcp"
     },
     {
+      "listen_url": "static.domain.com",
+      "port": ":443",
+      "target_addr": "./static",
+      "type": "static",
+      "protocol": "web"
+    },
+    {
       "listen_url": "vault.domain.com",
       "port": ":47319",
       "target_addr": "192.168.129.88:80",
@@ -71,7 +78,7 @@ Create a `config.json` file (in the same path as main.go or the executable) with
         - `listen_url`: Domain name to listen for (e.g., "vault.domain.com")
         - `port`: Port to listen on (e.g., ":47319")
         - `target_addr`: Target address for proxy routes
-        - `type`: "proxy" (for HTTP reverse proxy) or "func" (for internal functions)
+        - `type`: "proxy" (for HTTP reverse proxy) "static" (for serving a folder) or "func" (for internal functions)
         - `protocol`: "web" (required for domain-based routing)
         - `allow_insecure`: Allow insecure/self signed certificates (be ware of the dangers)
         - `no_headers`: Dont let Mazarin set secure headers

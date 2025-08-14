@@ -18,6 +18,26 @@ A simple HTTP proxy that forwards all traffic directly to your web server:
 ```
 This configuration forwards all HTTP traffic from port 80 to your internal web server. No domain filtering or TLS
 
+### Serve a folder
+---
+
+With this config you can serve a folder over http or https:
+
+```json
+{
+  "proxies": [
+    {
+      "listen_url": "static.domain.com",
+      "port": ":443",
+      "target_addr": "./static",
+      "type": "static",
+      "protocol": "web"
+    }
+  ]
+}
+```
+Watch out, everything in this folder (in this case ./static) will be public to the user.
+
 ### HTTPS with TLS
 ---
 

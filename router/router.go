@@ -87,6 +87,7 @@ func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *c
 	case "proxy":
 		proxy.HandleHTTPProxy(w, r, &routeInfo)
 	case "static":
+		proxy.HandleStaticServe(w, r, &routeInfo)
 	case "redirect":
 	case "func":
 		if webConf.EnableWebServer {
