@@ -36,7 +36,8 @@ Create a `config.json` file (in the same path as main.go or the executable) with
       "type": "proxy",
       "protocol": "web",
       "allow_insecure": true,
-      "no_headers": true
+      "no_headers": true,
+      "headers": {"Access-Control-Allow-Origin": "api.domain.com"}
     }
   ],
   "tls": {
@@ -82,6 +83,7 @@ Create a `config.json` file (in the same path as main.go or the executable) with
         - `protocol`: "web" (required for domain-based routing)
         - `allow_insecure`: Allow insecure/self signed certificates (be ware of the dangers)
         - `no_headers`: Dont let Mazarin set secure headers
+        - `headers`: Manually set the headers
 - **tls**: TLS/SSL configuration
     - `enable_tls`: Whether to enable TLS
     - `cert_file`: Path to certificate file

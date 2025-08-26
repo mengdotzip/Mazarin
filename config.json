@@ -20,6 +20,14 @@
       "protocol": "web"
     },
     {
+      "listen_url": "api.domain.com",
+      "port": ":443",
+      "target_addr": "192.168.129.100:5000",
+      "type": "proxy",
+      "protocol": "web",
+      "headers": {"Access-Control-Allow-Origin": "api.domain.com"}
+    },
+    {
       "listen_url": "proxmox.domain.com",
       "port": ":47319",
       "target_addr": "192.168.129.89:80",

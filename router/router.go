@@ -70,7 +70,7 @@ func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *c
 
 	if !routeInfo.NoHeaders {
 		//--Set secure headers---
-		//ONLY SET HEADERS FOR WEB, might have to change this to a sperate func in the future
+		//ONLY SET HEADERS FOR WEB, might have to change this to a separate func in the future
 		//Only set HSTS if using HTTPS
 		if r.TLS != nil {
 			w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
@@ -80,6 +80,10 @@ func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *c
 		w.Header().Set("Referrer-Policy", "no-referrer")
 		w.Header().Set("Permissions-Policy", "geolocation=(), camera=(), microphone=()") //IMPORTANT, if a proxied site needs these then you might want to disable this
 		//-------
+	}
+
+	for key, val := range routeInfo.Headers {
+		w.Header().Set(key, val)
 	}
 
 	log.Printf("ROUTER: IP %v getting routed to %v", clientIP, routeInfo.TargetAddr)
@@ -93,19 +97,14 @@ func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *c
 		if webConf.EnableWebServer {
 			//Currently only our webserver uses func, the func type is meant for routes that call code in the program
 			//TODO make this more configurable
-			var stylesCSS = webConf.StaticDir + "/styles.css"
-			var scriptJS = webConf.StaticDir + "/script_v2.js"
+			routeInfo.TargetAddr = webConf.StaticDir
 			switch r.URL.Path {
-			case "/":
-				http.ServeFile(w, r, webConf.StaticDir)
-			case "/styles.css", "/styles.css/":
-				http.ServeFile(w, r, stylesCSS)
-			case "/script_v2.js":
-				http.ServeFile(w, r, scriptJS)
 			case "/auth":
 				webserver.AuthHandler(w, r)
 			case "/sse":
 				webserver.SseHandler(ctx, webConf, w, r)
+			default:
+				proxy.HandleStaticServe(w, r, &routeInfo)
 			}
 		}
 	}
