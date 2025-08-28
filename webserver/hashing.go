@@ -56,7 +56,7 @@ func HashKey(key string) (string, error) {
 	return string(hash), err
 }
 
-func validateUserHash(password string, hash string) (bool, error) {
+func ValidateUserHash(password string, hash string) (bool, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	if err == nil {
 		return true, nil

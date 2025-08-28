@@ -130,7 +130,17 @@ func parseArgs() bool {
 			fmt.Println("Error generating hash:", err)
 			return true
 		}
-		fmt.Println(hashKey)
+
+		fmt.Printf("Hash '%v' created for password '%v' \n", hashKey, keyPtr)
+
+		testBool, err := webserver.ValidateUserHash(*keyPtr, hashKey)
+		if err != nil {
+			fmt.Println("Error validating Hash:", err)
+			return true
+		}
+		if testBool {
+			fmt.Println("Valid password generated")
+		}
 		return true
 	}
 	return false
