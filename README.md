@@ -2,6 +2,8 @@
 
 **Go-based proxy server with web authentication, firewall capabilities, TLS, routing and more to come :)**
 
+https://github.com/user-attachments/assets/209af405-0cf4-453d-a745-81dba677f82b
+
 ## Backstory
 
 Originally, Mazarin was created out of necessity: a friend wanted to connect to my game server, but was behind a VPN, making IP-based whitelisting impossible. Without the budget for a proper VPS or commercial solutions, I built Mazarin as a self-hosted proxy with authentication and firewall features to whitelist users dynamically.
