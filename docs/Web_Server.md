@@ -99,6 +99,40 @@ Host multiple web services under different subdomains:
     ]
   }
 }
+```
+
+### Multiple Proxies on the same url
+---
+
+You can define multiple proxies with the same url, as long as their port is different.
+
+```json
+{
+  "proxies": [
+    {
+      "listen_url": "api.domain.com",
+      "port": ":443",
+      "target_addr": "192.168.129.88:443",
+      "type": "proxy",
+      "protocol": "web"
+    },
+    {
+      "listen_url": "api.domain.com",
+      "port": ":8080",
+      "target_addr": "192.168.129.88:8080",
+      "type": "proxy",
+      "protocol": "web"
+    }
+  ],
+  "tls": {
+    "enable_tls": true,
+    "cert_file": "./tls/domain.pem",
+    "key_file": "./tls/priv.pem",
+    "domains": [
+      "api.domain.com"
+    ]
+  }
+}
   ```
 
 ### With Authentication & Firewall

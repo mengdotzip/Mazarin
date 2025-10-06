@@ -2,6 +2,7 @@ package router
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"mazarin/config"
 	"mazarin/firewall"
@@ -16,7 +17,7 @@ var routes = make(map[string]config.ProxyConfig)
 
 func InitRouter(routConf []config.ProxyConfig) {
 	for _, route := range routConf {
-		routes[route.ListenUrl] = route
+		routes[route.ListenUrl+route.Port] = route
 	}
 }
 
@@ -61,7 +62,20 @@ func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *c
 	//------
 
 	//ROUTING
-	routeInfo, ok := routes[reqHost[0]]
+	var currentPort string
+	if len(reqHost) == 1 {
+		if r.TLS == nil {
+			currentPort = "80"
+		} else {
+			currentPort = "443"
+		}
+	} else {
+		currentPort = reqHost[1]
+	}
+
+	routeSearch := fmt.Sprintf("%v:%v", reqHost[0], currentPort)
+	fmt.Println(routeSearch)
+	routeInfo, ok := routes[routeSearch]
 	if !ok {
 		log.Printf("ROUTER: Requested url is not a configured route: %v", reqHost[0])
 		http.Error(w, "Domain does not exist", http.StatusBadRequest)

@@ -23,6 +23,13 @@ Create a `config.json` file (in the same path as main.go or the executable) with
       "protocol": "web"
     },
     {
+      "listen_url": "static.domain.com",
+      "port": ":8080",
+      "target_addr": "192.168.129.90:8080",
+      "type": "proxy",
+      "protocol": "web"
+    },
+    {
       "listen_url": "vault.domain.com",
       "port": ":47319",
       "target_addr": "192.168.129.88:80",

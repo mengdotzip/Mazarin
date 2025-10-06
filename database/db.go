@@ -6,6 +6,8 @@ import (
 	"sync"
 )
 
+//have hashing here in the future
+
 type UserInfo struct {
 	Name     string
 	Ip       string
@@ -18,22 +20,17 @@ var usersMapIp = make(map[string][]*UserInfo)
 
 func GetUserByName(name string) *UserInfo {
 	dbMutex.RLock()
-	info, ok := usersMapName[name]
+	info := usersMapName[name]
 	dbMutex.RUnlock()
-	if ok {
-		return info
-	}
-	return nil
+	return info
 }
 
 func GetUserByIp(ip string) []*UserInfo {
 	dbMutex.RLock()
-	info, ok := usersMapIp[ip]
+	info := usersMapIp[ip]
 	dbMutex.RUnlock()
-	if ok {
-		return info
-	}
-	return nil
+	return info
+
 }
 
 func InsertUser(info UserInfo) bool {
