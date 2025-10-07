@@ -52,6 +52,9 @@ Use the output hash in your `keys.json` for authentication.
 go run main.go
 ```
 
+6. **(Optional)** <br>
+I personally run mazarin on my server as a systemd service, it very easy to define this. Please check the [DOCS](docs/Service_Example.md) for more info on this.
+
 **TESTING:** You can run
 ```bash
 go test

@@ -1,0 +1,21 @@
+[Unit]
+Description=Mazarin Proxy Server
+Documentation=https://github.com/mengdotzip/mazarin
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/ublocalproxy
+ExecStart=/home/ublocalproxy/mazarin
+Restart=on-failure
+RestartSec=6s
+StandardOutput=journal
+StandardError=journal
+
+NoNewPrivileges=true
+
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
