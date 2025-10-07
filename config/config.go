@@ -80,13 +80,13 @@ func LoadConfig() (Config, error) {
 		return cfg, err
 	}
 
-	cfg.Proxy = parseMulti(cfg.Proxy)
+	cfg.Proxy = ParseMulti(cfg.Proxy)
 	fmt.Println(cfg.Proxy)
 	return cfg, nil
 }
 
 // parse multi will just take ports and listen_urls and then parse them to multiple configs (per port/url)
-func parseMulti(cfg []ProxyConfig) []ProxyConfig {
+func ParseMulti(cfg []ProxyConfig) []ProxyConfig {
 
 	// URLS Parsing
 	var resultAfterUrls []ProxyConfig

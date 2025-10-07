@@ -52,6 +52,12 @@ Use the output hash in your `keys.json` for authentication.
 go run main.go
 ```
 
+**TESTING:** You can run
+```bash
+go test
+```
+To test some Mazarin features
+
 
 
 ## Planned Improvements
