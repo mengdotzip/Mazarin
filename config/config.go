@@ -15,7 +15,9 @@ import (
 // ----
 type ProxyConfig struct {
 	ListenUrl     string            `json:"listen_url"`
+	ListenUrls    []string          `json:"listen_urls"`
 	Port          string            `json:"port"`
+	Ports         []string          `json:"ports"`
 	TargetAddr    string            `json:"target_addr"`
 	Type          string            `json:"type"`
 	Protocol      string            `json:"protocol"`
@@ -78,7 +80,43 @@ func LoadConfig() (Config, error) {
 		return cfg, err
 	}
 
+	cfg.Proxy = parseMulti(cfg.Proxy)
+	fmt.Println(cfg.Proxy)
 	return cfg, nil
+}
+
+// parse multi will just take ports and listen_urls and then parse them to multiple configs (per port/url)
+func parseMulti(cfg []ProxyConfig) []ProxyConfig {
+
+	// URLS Parsing
+	var resultAfterUrls []ProxyConfig
+	for _, conf := range cfg {
+		if len(conf.ListenUrls) > 0 {
+			for _, url := range conf.ListenUrls {
+				expanded := conf
+				expanded.ListenUrl = url
+				resultAfterUrls = append(resultAfterUrls, expanded)
+			}
+		} else {
+			resultAfterUrls = append(resultAfterUrls, conf)
+		}
+	}
+
+	// PORTS Parsing
+	var resultAfterPorts []ProxyConfig
+	for _, conf := range resultAfterUrls {
+		if len(conf.Ports) > 0 {
+			for _, port := range conf.Ports {
+				expanded := conf
+				expanded.Port = port
+				resultAfterPorts = append(resultAfterPorts, expanded)
+			}
+		} else {
+			resultAfterPorts = append(resultAfterPorts, conf)
+		}
+	}
+
+	return resultAfterPorts
 }
 
 //-----------
