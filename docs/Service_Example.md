@@ -56,7 +56,7 @@ sudo systemctl enable mazarin
 sudo systemctl start mazarin
 ```
 
-Tou can check the status with
+You can check the status with
 ```
 sudo systemctl status mazarin
 ```

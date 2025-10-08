@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -80,13 +82,16 @@ func LoadConfig() (Config, error) {
 		return cfg, err
 	}
 
-	cfg.Proxy = ParseMulti(cfg.Proxy)
-	fmt.Println(cfg.Proxy)
+	cfg.Proxy, err = ParseMulti(cfg.Proxy)
+	if err != nil {
+		return cfg, err
+	}
+
 	return cfg, nil
 }
 
 // parse multi will just take ports and listen_urls and then parse them to multiple configs (per port/url)
-func ParseMulti(cfg []ProxyConfig) []ProxyConfig {
+func ParseMulti(cfg []ProxyConfig) ([]ProxyConfig, error) {
 
 	// URLS Parsing
 	var resultAfterUrls []ProxyConfig
@@ -116,7 +121,38 @@ func ParseMulti(cfg []ProxyConfig) []ProxyConfig {
 		}
 	}
 
-	return resultAfterPorts
+	// Ports Ranges Parsing
+	var resultAfterRanges []ProxyConfig
+	for _, conf := range resultAfterPorts {
+		splitResult := strings.Split(conf.Port, "-")
+		if len(splitResult) > 1 {
+
+			fromInt, err := strconv.Atoi(splitResult[0])
+			if err != nil {
+				return nil, err
+			}
+			untilInt, err := strconv.Atoi(splitResult[1])
+			if err != nil {
+				return nil, err
+			}
+
+			// check that the range is legal
+			if fromInt >= untilInt {
+				return nil, errors.New("cannot have a range starting at a higher or the same number")
+			}
+
+			for i := fromInt; i <= untilInt; i++ {
+				expanded := conf
+				expanded.Port = ":" + strconv.Itoa(i)
+				resultAfterRanges = append(resultAfterRanges, expanded)
+			}
+
+		} else {
+			resultAfterRanges = append(resultAfterRanges, conf)
+		}
+	}
+
+	return resultAfterRanges, nil
 }
 
 //-----------

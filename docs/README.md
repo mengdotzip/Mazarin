@@ -24,7 +24,7 @@ Create a `config.json` file (in the same path as main.go or the executable) with
     },
     {
       "listen_urls": ["static.domain.com","static.backup.domain.com"],
-      "ports": [":443","80"],
+      "ports": [":443",":80","500-600"],
       "target_addr": "./static",
       "type": "static",
       "protocol": "web"
@@ -73,14 +73,14 @@ Create a `config.json` file (in the same path as main.go or the executable) with
 - **proxies**: Array of proxy and routing configurations
     - **TCP/UDP Proxies**:
         - `port`: The local address and port to listen on (e.g., ":80")
-        - `ports`: You can also define multiple ports like this
+        - `ports`: You can also define multiple ports like this, you can also use ranges here (eg ["500-600"])
         - `target_addr`: The destination address to forward traffic to
         - `protocol`: "tcp" or "udp"
     - **Domain-based Web Routing**:
         - `listen_url`: Domain name to listen for (e.g., "vault.domain.com")
         - `listen_urls`: You can define multiple urls with this.
         - `port`: Port to listen on (e.g., ":47319")
-        - `ports`: You can also define multiple ports like this
+        - `ports`: You can also define multiple ports like this, you can also use ranges here (eg ["500-600"])
         - `target_addr`: Target address for proxy routes
         - `type`: "proxy" (for HTTP reverse proxy) "static" (for serving a folder) or "func" (for internal functions)
         - `protocol`: "web" (required for domain-based routing)

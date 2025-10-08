@@ -46,6 +46,13 @@ func TestParseMulti(t *testing.T) {
 			Type:       "proxy",
 			Protocol:   "web",
 		},
+		{ // Port ranges web
+			ListenUrl:  "test7.domain.com",
+			Ports:      []string{":80", "400-403"},
+			TargetAddr: "192.168.129.88:443",
+			Type:       "proxy",
+			Protocol:   "web",
+		},
 	}
 	expected := []config.ProxyConfig{
 		{ // Basic tcp
@@ -126,8 +133,46 @@ func TestParseMulti(t *testing.T) {
 			Type:       "proxy",
 			Protocol:   "web",
 		},
+		{ // Port ranges web
+			ListenUrl:  "test7.domain.com",
+			Port:       ":80",
+			TargetAddr: "192.168.129.88:443",
+			Type:       "proxy",
+			Protocol:   "web",
+		},
+		{
+			ListenUrl:  "test7.domain.com",
+			Port:       ":400",
+			TargetAddr: "192.168.129.88:443",
+			Type:       "proxy",
+			Protocol:   "web",
+		},
+		{
+			ListenUrl:  "test7.domain.com",
+			Port:       ":401",
+			TargetAddr: "192.168.129.88:443",
+			Type:       "proxy",
+			Protocol:   "web",
+		},
+		{
+			ListenUrl:  "test7.domain.com",
+			Port:       ":402",
+			TargetAddr: "192.168.129.88:443",
+			Type:       "proxy",
+			Protocol:   "web",
+		},
+		{
+			ListenUrl:  "test7.domain.com",
+			Port:       ":403",
+			TargetAddr: "192.168.129.88:443",
+			Type:       "proxy",
+			Protocol:   "web",
+		},
 	}
-	output := config.ParseMulti(input)
+	output, err := config.ParseMulti(input)
+	if err != nil {
+		t.Errorf("Something went wrong trying to parse: %v", err)
+	}
 	for i, result := range output {
 		if result.ListenUrl != expected[i].ListenUrl {
 			t.Errorf("[Config: %d] ListenUrl: got %v, want %v", i, result.ListenUrl, expected[i].ListenUrl)
