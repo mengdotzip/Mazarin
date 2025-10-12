@@ -25,8 +25,8 @@ Since then, Mazarin has evolved into a more robust proxy server with domain rout
 
 
 ## Getting Started
-
-**Note** Mazarin requires go 1.22 or higher.
+> [!IMPORTANT]
+> Mazarin requires go 1.22 or higher.
 
 1. **Clone the repository**
 ```bash
@@ -54,15 +54,14 @@ Use the output hash in your `keys.json` for authentication.
 go run main.go
 ```
 
-6. **(Optional)** <br>
-I personally run mazarin on my server as a systemd service, its very easy to create this. Please check the [DOCS](docs/Service_Example.md) if you are interested.
-
 **TESTING:** You can run
 ```bash
 go test
 ```
 To test some Mazarin features
 
+> [!TIP]
+> I personally run mazarin on my server as a systemd service, its very easy to create this. Please check the [DOCS](docs/Service_Example.md) if you are interested.
 
 
 ## Planned Improvements

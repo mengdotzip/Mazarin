@@ -143,13 +143,13 @@ func HandleStaticServe(w http.ResponseWriter, r *http.Request, routeInfo *config
 // go 1.22 introduced a safer way to handle file/folder serving by using openRoot: https://go.dev/doc/go1.22
 func serveFile(w http.ResponseWriter, r *http.Request, target string) {
 
-	// open route want a dir so well have to split it
+	// open root wants a dir so well have to split it
 	dir := filepath.Dir(target)
 	filename := filepath.Base(target)
 
 	root, err := os.OpenRoot(dir)
 	if err != nil {
-		http.Error(w, "Internal error", http.StatusInternalServerError)
+		http.Error(w, "Route does not exist", http.StatusBadRequest)
 		return
 	}
 	defer root.Close()
@@ -161,7 +161,7 @@ func serveFile(w http.ResponseWriter, r *http.Request, target string) {
 func serveFolder(w http.ResponseWriter, r *http.Request, target string) {
 	root, err := os.OpenRoot(target)
 	if err != nil {
-		http.Error(w, "Internal error", http.StatusInternalServerError)
+		http.Error(w, "Route does not exist", http.StatusBadRequest)
 		return
 	}
 	defer root.Close()
