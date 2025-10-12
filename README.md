@@ -26,6 +26,8 @@ Since then, Mazarin has evolved into a more robust proxy server with domain rout
 
 ## Getting Started
 
+**Note** Mazarin requires go 1.22 or higher.
+
 1. **Clone the repository**
 ```bash
 git clone https://github.com/mengdotzip/Mazarin.git

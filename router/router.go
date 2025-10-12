@@ -92,7 +92,7 @@ func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *c
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'")
 		w.Header().Set("Referrer-Policy", "no-referrer")
-		w.Header().Set("Permissions-Policy", "geolocation=(), camera=(), microphone=()") //IMPORTANT, if a proxied site needs these then you might want to disable this
+		w.Header().Set("Permissions-Policy", "geolocation=(), camera=(), microphone=()") //IMPORTANT, if a proxied site needs these then you might want to use the no headers flag
 		//-------
 	}
 

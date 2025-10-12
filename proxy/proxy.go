@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"io"
 	"log"
 	"mazarin/config"
@@ -12,6 +13,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -124,14 +126,47 @@ func HandleHTTPProxy(w http.ResponseWriter, r *http.Request, template *config.Pr
 
 func HandleStaticServe(w http.ResponseWriter, r *http.Request, routeInfo *config.ProxyConfig) {
 
-	requestedRoute := routeInfo.TargetAddr + r.URL.Path
-	_, err := os.Stat(requestedRoute)
+	fi, err := os.Stat(routeInfo.TargetAddr)
 	if err != nil {
-		log.Printf("PROXY: Static serve route does not exist %v", requestedRoute)
-		http.Error(w, "Route does not exist", http.StatusBadRequest)
+		fmt.Println(err)
 		return
 	}
 
-	log.Printf("DEBUG: the static serve route is %v", requestedRoute)
-	http.ServeFile(w, r, requestedRoute)
+	switch mode := fi.Mode(); {
+	case mode.IsDir():
+		serveFolder(w, r, routeInfo.TargetAddr)
+	case mode.IsRegular():
+		serveFile(w, r, routeInfo.TargetAddr)
+	}
+}
+
+// go 1.22 introduced a safer way to handle file/folder serving by using openRoot: https://go.dev/doc/go1.22
+func serveFile(w http.ResponseWriter, r *http.Request, target string) {
+
+	// open route want a dir so well have to split it
+	dir := filepath.Dir(target)
+	filename := filepath.Base(target)
+
+	root, err := os.OpenRoot(dir)
+	if err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
+	defer root.Close()
+
+	fsys := root.FS()
+	http.ServeFileFS(w, r, fsys, filename)
+}
+
+func serveFolder(w http.ResponseWriter, r *http.Request, target string) {
+	root, err := os.OpenRoot(target)
+	if err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
+	defer root.Close()
+
+	fsys := root.FS()
+	fileServer := http.FileServerFS(fsys)
+	fileServer.ServeHTTP(w, r)
 }
