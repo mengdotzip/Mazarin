@@ -73,13 +73,23 @@ func route(ctx context.Context, webConf *config.WebserverConfig, firewallConf *c
 		currentPort = reqHost[1]
 	}
 
-	routeSearch := fmt.Sprintf("%v:%v", reqHost[0], currentPort)
-	fmt.Println(routeSearch)
-	routeInfo, ok := routes[routeSearch]
-	if !ok {
-		log.Printf("ROUTER: Requested url is not a configured route: %v", reqHost[0])
-		http.Error(w, "Domain does not exist", http.StatusBadRequest)
-		return
+	log.Println(r.URL.Path)
+	var routeSearchPath string
+	var routeInfo config.ProxyConfig
+	if r.URL.Path != "/" {
+		routeSearchPath = fmt.Sprintf("%v%v:%v", reqHost[0], r.URL.Path, currentPort)
+	}
+	if routeInfoPath, ok := routes[routeSearchPath]; ok {
+		routeInfo = routeInfoPath
+	} else {
+		routeSearch := fmt.Sprintf("%v:%v", reqHost[0], currentPort)
+		routeInfoNP, ok := routes[routeSearch]
+		if !ok {
+			log.Printf("ROUTER: Requested url is not a configured route: %v", reqHost[0])
+			http.Error(w, "Domain does not exist", http.StatusBadRequest)
+			return
+		}
+		routeInfo = routeInfoNP
 	}
 
 	if !routeInfo.NoHeaders {

@@ -18,6 +18,7 @@ import (
 type ProxyConfig struct {
 	ListenUrl     string            `json:"listen_url"`
 	ListenUrls    []string          `json:"listen_urls"`
+	Path          string            `json:"path"`
 	Port          string            `json:"port"`
 	Ports         []string          `json:"ports"`
 	TargetAddr    string            `json:"target_addr"`
@@ -49,6 +50,7 @@ type WebserverConfig struct {
 	ListenURL       string `json:"listen_url"`
 	StaticDir       string `json:"static_dir"`
 	KeysDir         string `json:"keys_dir"`
+	DbDir           string `json:"db_dir"`
 }
 
 // ----
@@ -212,6 +214,9 @@ func ParseProxies(toParse []ProxyConfig, tlsConf *TLSConfig) (map[string]ParsedP
 	parsedProxyMap := make(map[string]ParsedProxy)
 	var toBeRouted []ProxyConfig
 	for _, proxies := range toParse {
+		if proxies.Path != "" {
+			proxies.ListenUrl = proxies.ListenUrl + proxies.Path
+		}
 		switch proxies.Protocol {
 		case "web":
 			toBeRouted = append(toBeRouted, proxies)
@@ -236,7 +241,7 @@ func ParseProxies(toParse []ProxyConfig, tlsConf *TLSConfig) (map[string]ParsedP
 				Protocol: proxies.Protocol,
 				TLS:      slices.Contains(tlsConf.Domains, proxies.ListenUrl),
 			}
-			newProxy.LinkedProxies = append(newProxy.LinkedProxies, &proxies) //could find how to define the array in the struct creation
+			newProxy.LinkedProxies = append(newProxy.LinkedProxies, &proxies)
 			parsedProxyMap[newProxy.Port] = newProxy
 
 		case "tcp", "udp":

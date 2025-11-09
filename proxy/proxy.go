@@ -3,7 +3,6 @@ package proxy
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"io"
 	"log"
 	"mazarin/config"
@@ -128,13 +127,14 @@ func HandleStaticServe(w http.ResponseWriter, r *http.Request, routeInfo *config
 
 	fi, err := os.Stat(routeInfo.TargetAddr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
 	switch mode := fi.Mode(); {
 	case mode.IsDir():
-		serveFolder(w, r, routeInfo.TargetAddr)
+		serveFolder(w, r, routeInfo.TargetAddr, routeInfo.Path)
 	case mode.IsRegular():
 		serveFile(w, r, routeInfo.TargetAddr)
 	}
@@ -158,7 +158,7 @@ func serveFile(w http.ResponseWriter, r *http.Request, target string) {
 	http.ServeFileFS(w, r, fsys, filename)
 }
 
-func serveFolder(w http.ResponseWriter, r *http.Request, target string) {
+func serveFolder(w http.ResponseWriter, r *http.Request, target string, stripPath string) {
 	root, err := os.OpenRoot(target)
 	if err != nil {
 		http.Error(w, "Route does not exist", http.StatusBadRequest)
@@ -168,5 +168,13 @@ func serveFolder(w http.ResponseWriter, r *http.Request, target string) {
 
 	fsys := root.FS()
 	fileServer := http.FileServerFS(fsys)
-	fileServer.ServeHTTP(w, r)
+	log.Println(stripPath)
+
+	// Strip the path so we can serve a target that has path:/foo defined
+	if stripPath != "" {
+		fileServer = http.StripPrefix(stripPath, fileServer)
+		fileServer.ServeHTTP(w, r)
+	} else {
+		fileServer.ServeHTTP(w, r)
+	}
 }

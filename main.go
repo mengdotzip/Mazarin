@@ -55,7 +55,15 @@ func main() {
 			Protocol:  "web",
 		}
 		cfg.Proxy = append(cfg.Proxy, webRoute)
+
 		webserver.Init(webserver.LoadKeys(cfg.Webserver.KeysDir))
+
+		// Preparations for the oncoming db rework
+		//	if err := database.InitDb(&cfg.Webserver); err != nil {
+		//		log.Println("DataBase init error: ", err)
+		//		return
+		//	}
+		//	defer database.GetDB().Close()
 	}
 	//-----
 
